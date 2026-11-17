@@ -1,0 +1,15 @@
+{
+  "name": "motofix",
+  "version": "1.0.0",
+  "private": true,
+  "description": "MotoFix: gestión de taller de motocicletas (facturación, inventario, RBAC, auditoría e IA de anomalías)",
+  "scripts": {
+    "start": "npm --prefix backend start",
+    "dev": "npm --prefix backend run dev",
+    "seed": "npm --prefix backend run seed",
+    "test": "npm --prefix backend test",
+    "install:frontend": "npm --prefix frontend install",
+    "build": "npm --prefix frontend run build"
+  },
+  "engines": { "node": ">=22.13" }
+}
