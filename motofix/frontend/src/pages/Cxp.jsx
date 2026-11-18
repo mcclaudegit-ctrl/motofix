@@ -462,7 +462,7 @@ export function CxpReports() {
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'end' }}>
           <Field label="Tipo"><select value={kind} onChange={(e) => setKind(e.target.value)}>
             <option value="riesgo">Resumen de riesgo por nivel</option><option value="pendientes">Facturas pendientes de aprobación</option><option value="hallazgos">Detalle de hallazgos de auditoría</option></select></Field>
-          <Field label="Formato"><select value={format} onChange={(e) => setFormat(e.target.value)}><option value="pdf">PDF</option><option value="xls">Excel (.xls)</option><option value="csv">CSV</option></select></Field>
+          <Field label="Formato"><select value={format} onChange={(e) => setFormat(e.target.value)}><option value="pdf">PDF</option><option value="xlsx">Excel (.xlsx)</option><option value="csv">CSV</option></select></Field>
           {can('ap.reports') ? <Button variant="primary" icon={LuRefreshCw} onClick={gen}>Generar</Button> : <Button locked>Generar</Button>}
         </div>
       </Card>

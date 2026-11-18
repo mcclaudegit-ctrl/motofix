@@ -209,3 +209,11 @@ test('token manipulado se rechaza', async () => {
   const forged = `${h}.${Buffer.from(JSON.stringify({ sub: 1, role: 'admin', exp: 9999999999 })).toString('base64url')}.${s}`;
   assert.equal((await call('GET', '/api/users', forged)).status, 401);
 });
+
+test('versión publicada para el aviso de actualización en vivo', async () => {
+  const a = await call('GET', '/api/version');
+  assert.equal(a.status, 200);
+  assert.match(a.body.version, /^local-/);
+  const b = await call('GET', '/api/version');
+  assert.equal(b.body.version, a.body.version, 'estable mientras no se publique otra versión');
+});

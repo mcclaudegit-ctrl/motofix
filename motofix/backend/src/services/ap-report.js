@@ -1,8 +1,16 @@
-// Reportes automáticos de CxP en PDF (sin dependencias), Excel (SpreadsheetML 2003, .xls) y CSV.
+// Reportes automáticos de CxP en PDF, Excel (.xlsx) y CSV, sin dependencias externas.
 import { all, get, run } from '../db.js';
 import { HttpError } from '../lib/http.js';
 import { getSettings } from './ap.js';
 import { crc } from '../lib/time.js';
+import { buildXlsx } from '../lib/xlsx.js';
+
+const MIME = {
+  pdf: 'application/pdf',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  xls: 'application/vnd.ms-excel', // reportes antiguos (SpreadsheetML 2003)
+  csv: 'text/csv; charset=utf-8',
+};
 
 const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -85,17 +93,6 @@ export function buildPdf(title, lines) {
   return Buffer.concat(parts);
 }
 
-function buildXls(title, table) {
-  const cell = (v) => typeof v === 'number' ? `<Cell><Data ss:Type="Number">${v}</Data></Cell>` : `<Cell><Data ss:Type="String">${esc(v)}</Data></Cell>`;
-  const rows = table.map((r) => `<Row>${r.map(cell).join('')}</Row>`).join('\n');
-  return `<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
-<Worksheet ss:Name="${esc(title.slice(0, 30))}"><Table>
-${rows}
-</Table></Worksheet></Workbook>`;
-}
-
 function buildCsv(table) {
   const q = (v) => { const s = String(v ?? ''); return /[",;\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
   return '﻿' + table.map((r) => r.map(q).join(',')).join('\r\n');
@@ -104,7 +101,8 @@ function buildCsv(table) {
 /** Genera un reporte, lo guarda y devuelve su metadato. */
 export function generateReport({ kind, format, actor = null, scheduled = false }) {
   if (!REPORT_KINDS[kind]) throw new HttpError(422, 'VALIDACION', 'Tipo de reporte inválido');
-  if (!['pdf', 'xls', 'csv'].includes(format)) throw new HttpError(422, 'VALIDACION', 'Formato inválido (pdf, xls o csv)');
+  if (format === 'xls') format = 'xlsx'; // «Excel» siempre se genera como .xlsx moderno
+  if (!['pdf', 'xlsx', 'csv'].includes(format)) throw new HttpError(422, 'VALIDACION', 'Formato inválido (pdf, xlsx o csv)');
   const title = REPORT_KINDS[kind];
   const { rows, open, S } = dataset(kind);
   const base = kind === 'pendientes' ? rows : rows;
@@ -125,7 +123,7 @@ export function generateReport({ kind, format, actor = null, scheduled = false }
     content = buildPdf(title, lines); mime = 'application/pdf';
   } else {
     const table = tableRows(kind, base);
-    if (format === 'xls') { content = Buffer.from(buildXls(title, table), 'utf8'); mime = 'application/vnd.ms-excel'; }
+    if (format === 'xlsx') { content = buildXlsx(title, table); mime = MIME.xlsx; }
     else { content = Buffer.from(buildCsv(table), 'utf8'); mime = 'text/csv; charset=utf-8'; }
   }
   const created = new Date().toISOString();
@@ -139,9 +137,7 @@ export const listReports = () => all('SELECT id,kind,format,title,scheduled,crea
 export function getReport(id) {
   const r = get('SELECT * FROM ap_reports WHERE id=?', id);
   if (!r) throw new HttpError(404, 'NO_ENCONTRADO', 'Reporte no encontrado');
-  const mime = { pdf: 'application/pdf', xls: 'application/vnd.ms-excel', csv: 'text/csv; charset=utf-8' }[r.format];
-  const ext = r.format === 'xls' ? 'xls' : r.format;
-  return { body: r.content, mime, filename: `motofix-cxp-${r.kind}-${r.id}.${ext}` };
+  return { body: r.content, mime: MIME[r.format] || 'application/octet-stream', filename: `motofix-cxp-${r.kind}-${r.id}.${r.format}` };
 }
 
 /** Reporte semanal automático: se genera si el último programado tiene más de 7 días. */

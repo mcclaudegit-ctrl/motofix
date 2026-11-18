@@ -36,7 +36,7 @@ El producto se centra en la **revisión de cuentas por pagar**, con tres módulo
 
 1. **Entrada y limpieza de datos.** Registro manual, lectura de PDF (con un proveedor de IA configurable), importación de XML/CSV y bases SQLite externas en solo lectura. Estandariza nombres, cédulas, fechas, montos (₡/$), monedas, cuentas bancarias y categorías, y deja cada cambio en una bitácora (antes → después).
 2. **Detector de anomalías.** Duplicados (mismo número, mismo monto y fecha, montos con fechas cercanas, la misma factura por dos canales), patrones irregulares (monto a ≤5% del límite, fraccionamiento para evadir el límite, monto atípico frente al historial, fecha futura, domingo) y coincidencia con el maestro de proveedores (no registrado, cédula con nombre distinto, cuenta bancaria cambiada, proveedor que es empleado).
-3. **Dashboard y alertas de auditoría.** Clasifica cada factura en riesgo **Bajo / Medio / Alto** con un puntaje ponderado (pesos y umbrales editables), muestra las facturas críticas y genera reportes automáticos en PDF, Excel (.xls) y CSV, más un resumen semanal de riesgo.
+3. **Dashboard y alertas de auditoría.** Clasifica cada factura en riesgo **Bajo / Medio / Alto** con un puntaje ponderado (pesos y umbrales editables), muestra las facturas críticas y genera reportes automáticos en PDF, Excel (.xlsx) y CSV, más un resumen semanal de riesgo.
 
 **Aprobación.** Las facturas sobre **₡700.000** requieren dos aprobaciones de personas distintas. Quien registra una factura no puede aprobarla (segregación de funciones). Las facturas de riesgo alto exigen justificación escrita, y las que tienen datos mínimos incompletos o vienen de PDF no se pueden aprobar hasta confirmar su revisión.
 
@@ -49,7 +49,7 @@ Regla de correo: siempre se avisa internamente; se responde al proveedor solo si
 
 **Importación.** SQLite (.db/.sqlite, hasta 20 MB) y CSV. El archivo se abre en solo lectura, las tablas y columnas se validan antes de usarse, y el mapeo a campos CxP es explícito. PostgreSQL y MySQL no se conectan directamente: exporta a SQLite o CSV.
 
-**Lectura de PDF.** Usa la variable `AI_PROVIDER=gemini` con `AI_API_KEY`. Sin clave, la extracción es simulada. Antes de usarla en producción, verifica los límites gratuitos vigentes del proveedor. La implementación sigue la API pública de Gemini, pero no se probó contra el servicio real desde el entorno de desarrollo.
+**Lectura de PDF.** Configura en Vercel `AI_PROVIDER=gemini` y `AI_API_KEY` (clave gratuita de Google AI Studio). Sin clave, la extracción es simulada y la pantalla lo indica. Por defecto usa el modelo `gemini-flash-latest`, un alias que Google mantiene apuntando al Flash vigente, así que no se rompe cuando retiran una versión. Con `AI_MODEL` se puede fijar otro. Los límites del plan gratuito cambian con frecuencia: revísalos en AI Studio. Si se agota la cuota, la app lo explica en el mensaje de error. La solicitud sigue la API `generateContent` (PDF en línea) y está probada contra un servidor simulado (`test/gemini.test.js`); falta probarla con una clave real.
 
 **Roles nuevos.** *Auditor* (solo lectura: revisa facturas, hallazgos, bitácora y reportes; no aprueba ni modifica). Los roles de contador, gerente y administrador reciben los permisos `ap.*` según la matriz de accesos.
 
@@ -74,7 +74,7 @@ Vercel no guarda archivos entre solicitudes, así que en la nube la base vive en
 | `TURSO_DATABASE_URL` | la URL `libsql://…` de Turso |
 | `TURSO_AUTH_TOKEN` | el token de Turso |
 | `JWT_SECRET` | texto aleatorio largo (p. ej. `openssl rand -hex 32`) |
-| `CRON_SECRET` | opcional: otro texto aleatorio; activa el cron diario y permite reiniciar la demo |
+| `CRON_SECRET` | opcional: texto aleatorio; restringe el cron diario a Vercel y permite reiniciar la demo |
 | `DEMO_MODE` | `true` para la demo con selector de rol; `false` para uso real |
 | `AI_PROVIDER`, `AI_API_KEY` | opcionales, para leer PDF con Gemini |
 

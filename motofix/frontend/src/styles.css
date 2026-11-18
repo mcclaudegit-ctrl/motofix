@@ -150,3 +150,16 @@ input:focus, select:focus, textarea:focus, .btn:focus-visible, .nav a:focus-visi
   .login { grid-template-columns: 1fr; } .login-art { padding: 24px; } .login-art img { width: 70%; } .login-form { padding: 26px 20px; } .hide-sm { display: none; } .search input { width: 100%; }
 }
 td.mono { white-space: nowrap; }
+
+/* Teléfonos: barra superior en una fila, notificaciones a todo el ancho y cuadrículas apiladas. */
+@media (max-width: 600px) {
+  .topbar { flex-wrap: nowrap; gap: 6px; padding: 8px 10px; }
+  .topbar .grow { display: none; }
+  .demo-switch { flex: 1 1 auto; min-width: 0; padding: 4px; gap: 0; }
+  .demo-switch .tag { display: none; }
+  .demo-switch select { width: 100%; min-width: 0; padding: 6px 24px 6px 10px; font-size: 13px; }
+  .userchip { padding: 0; border: 0; background: none; }
+  .dropdown { position: fixed; left: 8px; right: 8px; top: 62px; width: auto; max-width: none; max-height: calc(100vh - 80px); overflow-y: auto; }
+  .content [style*="grid-template-columns"] { grid-template-columns: minmax(0, 1fr) !important; }
+  .content .card, .content .card-b { min-width: 0; }
+}

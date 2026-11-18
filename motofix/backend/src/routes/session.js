@@ -10,6 +10,10 @@ import { logEvent, ctxLog } from '../audit.js';
 import { localParts } from '../lib/time.js';
 import { run } from '../db.js';
 
+// En Vercel cada instancia arranca por separado: sin identificador de despliegue no se inventa uno
+// (daría avisos falsos); la página usa entonces la huella de sus archivos estáticos.
+const APP_VERSION = process.env.VERCEL_DEPLOYMENT_ID || process.env.VERCEL_GIT_COMMIT_SHA || (process.env.VERCEL ? null : `local-${Date.now().toString(36)}`);
+
 function publicUser(u) {
   const supplier = u.supplier_id ? get('SELECT name FROM suppliers WHERE id=?', u.supplier_id) : null;
   return { id: u.id, name: u.name, email: u.email, role: u.role, roleLabel: ROLES[u.role].label, supplier_id: u.supplier_id, supplierName: supplier?.name || null };
@@ -25,6 +29,10 @@ const DUMMY = 'scrypt$00000000000000000000000000000000$' + '0'.repeat(128);
 
 export function sessionRoutes(r) {
   r.get('/api/health', () => ({ ok: true, demoMode: config.demoMode }));
+
+  // Versión publicada: la página la consulta para avisar y recargar cuando se despliega una nueva.
+  // En Vercel cambia con cada despliegue; en un servidor propio, con cada reinicio.
+  r.get('/api/version', () => ({ version: APP_VERSION }));
 
   r.post('/api/auth/login', (ctx) => {
     rateLimit(`login:${ctx.ip}`, 10, 60_000);

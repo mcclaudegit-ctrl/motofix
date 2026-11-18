@@ -47,14 +47,14 @@ export function apRoutes(r) {
   r.postRaw('/api/ap/invoices/pdf', auth, perm('ap.simulate'), async (ctx) => {
     const buf = ctx.rawBody;
     if (!buf?.length) throw new HttpError(422, 'ARCHIVO_VACIO', 'Envía el PDF en el cuerpo de la solicitud');
-    if (buf.length > MAX_IMPORT_BYTES) throw new HttpError(413, 'PAYLOAD_GRANDE', 'El PDF supera 20 MB');
+    if (buf.length > MAX_IMPORT_BYTES) throw new HttpError(413, 'PAYLOAD_GRANDE', `El PDF supera ${MAX_IMPORT_BYTES / 1024 / 1024} MB`);
     if (buf.subarray(0, 4).toString('latin1') !== '%PDF') throw new HttpError(422, 'FORMATO_INVALIDO', 'El archivo no es un PDF');
     const ex = await extractFromPdf({ base64Pdf: buf.toString('base64') });
     const f = ex.fields || {};
     const inv = ingest({
       vendor_name: f.vendor_name, tax_id: f.tax_id, invoice_number: f.invoice_number, issue_date: f.issue_date, currency: f.currency,
       subtotal: f.subtotal, tax: f.tax, total: f.total, category: f.category, bank_account: f.bank_account,
-    }, { source: 'pdf', needsReview: true, rawText: `PDF ${ctx.query.name || 'sin nombre'} · extractor ${ex.provider}`, ...meta(ctx) });
+    }, { source: 'pdf', needsReview: true, rawText: `PDF ${ctx.query.name || 'sin nombre'} · extractor ${ex.provider}${ex.model ? ` (${ex.model})` : ''}`, ...meta(ctx) });
     return { invoice: getInvoice(inv.id), extractor: ex.provider };
   });
 
@@ -139,7 +139,7 @@ export function apRoutes(r) {
   r.get('/api/ap/reports', auth, perm('ap.reports'), () => ({ reports: listReports(), kinds: REPORT_KINDS }));
   r.post('/api/ap/reports', auth, perm('ap.reports'), (ctx) => {
     const kind = v.oneOf(ctx.body.kind, 'tipo', Object.keys(REPORT_KINDS));
-    const format = v.oneOf(ctx.body.format, 'formato', ['pdf', 'xls', 'csv']);
+    const format = v.oneOf(ctx.body.format, 'formato', ['pdf', 'xlsx', 'xls', 'csv']);
     return { report: generateReport({ kind, format, actor: ctx.user }) };
   });
   r.get('/api/ap/reports/:id/download', auth, perm('ap.reports'), (ctx) => {

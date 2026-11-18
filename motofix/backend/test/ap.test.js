@@ -187,10 +187,16 @@ test('reportes: PDF válido, Excel y CSV con BOM', async () => {
   const buf = Buffer.from(await dl.arrayBuffer());
   assert.equal(buf.subarray(0, 5).toString('latin1'), '%PDF-');
   assert.ok(buf.toString('latin1').includes('%%EOF'));
-  const xls = await call('POST', '/api/ap/reports', tokens.gerente, { kind: 'hallazgos', format: 'xls' });
-  assert.equal(xls.status, 200);
-  const dx = await fetch(`${base}/api/ap/reports/${xls.body.report.id}/download`, { headers: { Authorization: `Bearer ${tokens.gerente}` } });
-  assert.match(await dx.text(), /urn:schemas-microsoft-com:office:spreadsheet/);
+  for (const format of ['xlsx', 'xls']) { // «xls» (pantallas antiguas) también produce un .xlsx moderno
+    const x = await call('POST', '/api/ap/reports', tokens.gerente, { kind: 'hallazgos', format });
+    assert.equal(x.status, 200);
+    assert.equal(x.body.report.format, 'xlsx');
+    const dx = await fetch(`${base}/api/ap/reports/${x.body.report.id}/download`, { headers: { Authorization: `Bearer ${tokens.gerente}` } });
+    assert.match(dx.headers.get('content-type'), /spreadsheetml\.sheet/);
+    assert.match(dx.headers.get('content-disposition') || '', /\.xlsx/);
+    const xb = Buffer.from(await dx.arrayBuffer());
+    assert.equal(xb.subarray(0, 4).toString('latin1'), 'PK\u0003\u0004');
+  }
   const csv = await call('POST', '/api/ap/reports', tokens.gerente, { kind: 'pendientes', format: 'csv' });
   const dc = await fetch(`${base}/api/ap/reports/${csv.body.report.id}/download`, { headers: { Authorization: `Bearer ${tokens.gerente}` } });
   const cb = Buffer.from(await dc.arrayBuffer());
