@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import {
-  LuLayoutDashboard, LuReceipt, LuWrench, LuUsers, LuFileText, LuPackage, LuTruck, LuCheckCheck, LuScale, LuBrainCircuit,
+  LuLayoutDashboard, LuReceipt, LuWrench, LuUsers, LuFileText, LuPackage, LuTruck, LuCheckCheck, LuScale,
   LuScrollText, LuKeyRound, LuStore, LuBell, LuLogOut, LuMenu, LuX, LuLock, LuShieldAlert, LuTriangleAlert, LuInfo,
-  LuWallet, LuMail, LuBuilding2, LuDatabase, LuFileDown, LuSlidersHorizontal,
+  LuWallet, LuMail, LuBuilding2, LuShieldCheck, LuDatabase, LuFileDown, LuSlidersHorizontal,
 } from 'react-icons/lu';
 import { useAuth } from './lib/auth.jsx';
 import { useRouter, Link, matchPath } from './lib/router.jsx';
@@ -46,7 +46,7 @@ const ROUTES = [
   { path: '/compras', title: 'Compras e insumos', icon: LuTruck, perms: ['purchases.view'], el: Purchases, group: 'Finanzas' },
   { path: '/aprobaciones', title: 'Aprobaciones', icon: LuCheckCheck, perms: ['approvals.request', 'approvals.resolve'], el: Approvals, group: 'Finanzas' },
   { path: '/contabilidad', title: 'Contabilidad y NIIF 15', icon: LuScale, perms: ['accounting.view'], el: Accounting, group: 'Finanzas' },
-  { path: '/ia', title: 'Motor de IA', icon: LuBrainCircuit, perms: ['ai.view'], el: AiEngine, group: 'Control' },
+  { path: '/auditor-inteligente', title: 'Auditor Inteligente', icon: LuShieldCheck, perms: ['ai.view'], el: AiEngine, group: 'Control' },
   { path: '/auditoria', title: 'Bitácora de auditoría', icon: LuScrollText, perms: ['audit.view'], el: Audit, group: 'Control' },
   { path: '/accesos', title: 'Control de accesos', icon: LuKeyRound, perms: ['users.manage', 'permissions.manage'], el: Access, group: 'Control' },
   { path: '/portal', title: 'Portal de proveedores', icon: LuStore, perms: ['supplier.portal'], el: Portal, group: 'Proveedores' },
@@ -91,6 +91,8 @@ function Shell() {
   // Cada navegación queda en la bitácora (PRD criterio 4).
   useEffect(() => { if (current) track('NAVEGACION', 'ruta', `${current.r.title} (${pathname})${allowed ? '' : ' — BLOQUEADA por guardia de navegación'}`); }, [pathname, user.id]); // eslint-disable-line
   useEffect(() => { if (pathname === '/' && home !== '/') navigate(home, { replace: true }); }, [pathname, home, navigate]);
+  // Enlaces viejos (notificaciones, marcadores) a la ruta anterior del módulo.
+  useEffect(() => { if (pathname === '/ia') navigate('/auditor-inteligente', { replace: true }); }, [pathname, navigate]);
 
   const switchRole = async (key) => {
     try { await demoLogin(key); navigate('/', { replace: true }); toast('Sesión cambiada (modo demo)'); } catch (e) { toast(e.message, 'err'); }

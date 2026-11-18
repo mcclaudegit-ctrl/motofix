@@ -1,4 +1,4 @@
-import { LuReceipt, LuClock, LuTriangleAlert, LuBrainCircuit, LuTrendingUp, LuTrendingDown, LuWrench, LuFileText, LuPackage, LuActivity, LuScanLine, LuArrowRight } from 'react-icons/lu';
+import { LuReceipt, LuClock, LuTriangleAlert, LuShieldCheck, LuTrendingUp, LuTrendingDown, LuWrench, LuFileText, LuPackage, LuActivity, LuScanLine, LuArrowRight } from 'react-icons/lu';
 import { get } from '../lib/api.js';
 import { useAuth } from '../lib/auth.jsx';
 import { Link } from '../lib/router.jsx';
@@ -20,7 +20,7 @@ function Executive({ d, can }) {
   return (
     <>
       <div className="page-head">
-        <div><h1>Dashboard ejecutivo</h1><p>Visión consolidada del taller, orientada a auditoría: facturación, pendientes y alertas del motor de IA.</p></div>
+        <div><h1>Dashboard ejecutivo</h1><p>Visión consolidada del taller, orientada a auditoría: facturación, pendientes y alertas del Auditor Inteligente.</p></div>
         <span className="live">Actualización en vivo</span>
       </div>
       <div className="grid g4" style={{ marginBottom: 16 }}>
@@ -29,13 +29,13 @@ function Executive({ d, can }) {
         <Kpi label="Transacciones pendientes" icon={LuClock} value={k.pendientes.total}
           sub={`${k.pendientes.invoices} por cobrar (${crc(k.pendientes.invoices_amount)}) · ${k.pendientes.purchases} compras · ${k.pendientes.approvals} aprobaciones`} />
         <Kpi alert={k.con_alertas.count > 0} label="Facturas con alertas" icon={LuTriangleAlert} value={k.con_alertas.count} sub={`${crc(k.con_alertas.amount)} involucrados`} />
-        <Kpi label="Alertas de IA abiertas" icon={LuBrainCircuit} value={sev.alta + sev.media + sev.baja}
+        <Kpi label="Alertas abiertas del Auditor Inteligente" icon={LuShieldCheck} value={sev.alta + sev.media + sev.baja}
           sub={<><Badge tone="danger">{sev.alta} altas</Badge> <Badge tone="warn">{sev.media} medias</Badge> <Badge tone="brand">{sev.baja} bajas</Badge></>} />
       </div>
 
       <div className="grid g-main" style={{ marginBottom: 16 }}>
-        <Card title="Inteligencia artificial · transacciones sospechosas" icon={LuBrainCircuit} flush
-          actions={can('ai.view') && <Link to="/ia" className="btn primary sm"><LuScanLine /> Escanear facturas</Link>}>
+        <Card title="Auditor Inteligente · transacciones sospechosas" icon={LuShieldCheck} flush
+          actions={can('ai.view') && <Link to="/auditor-inteligente" className="btn primary sm"><LuScanLine /> Escanear facturas</Link>}>
           {d.top_alerts.length === 0 && <Empty>Sin alertas abiertas. Todo en orden.</Empty>}
           {d.top_alerts.map((a) => (
             <div key={a.id} className={`alert-item sev-${a.severity}`}>
@@ -47,7 +47,7 @@ function Executive({ d, can }) {
               <div style={{ textAlign: 'right' }}><SevBadge sev={a.severity} /><div style={{ marginTop: 6 }}><span className="score"><i style={{ width: `${a.score}%` }} /></span> <small className="mono">{a.score}</small></div></div>
             </div>
           ))}
-          {d.top_alerts.length > 0 && <div style={{ padding: '10px 18px' }}><Link to="/ia">Ver todas las alertas <LuArrowRight style={{ verticalAlign: -2 }} /></Link></div>}
+          {d.top_alerts.length > 0 && <div style={{ padding: '10px 18px' }}><Link to="/auditor-inteligente">Ver todas las alertas <LuArrowRight style={{ verticalAlign: -2 }} /></Link></div>}
         </Card>
         <Card title="Actividad por rol (7 días)" icon={LuActivity}>
           {d.activity_by_role.map((a) => (

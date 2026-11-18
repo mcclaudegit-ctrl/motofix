@@ -35,7 +35,7 @@ export function upsertAnomaly(a, known) {
     a.rule, a.severity, a.score ?? SCORE[a.severity], a.ref_type, a.ref_id ?? null, a.ref_label ?? null,
     a.title, a.detail ?? null, a.dedupe_key, a.ts || new Date().toISOString(),
   );
-  if (a.severity === 'alta') notify({ level: 'critical', title: `Alerta IA: ${a.title}`, body: a.detail, link: '/ia', ts: a.ts });
+  if (a.severity === 'alta') notify({ level: 'critical', title: `Alerta del Auditor Inteligente: ${a.title}`, body: a.detail, link: '/auditor-inteligente', ts: a.ts });
   const id = Number(r.lastInsertRowid);
   known?.set(a.dedupe_key, id);
   return { created: true, id };

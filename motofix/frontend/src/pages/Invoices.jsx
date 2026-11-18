@@ -16,7 +16,7 @@ export function InvoiceList() {
   return (
     <>
       <div className="page-head">
-        <div><h1>Facturas</h1><p>Facturas de venta y servicios mecánicos. Las filas en rojo tienen alertas abiertas del motor de IA.</p></div>
+        <div><h1>Facturas</h1><p>Facturas de venta y servicios mecánicos. Las filas en rojo tienen alertas abiertas del Auditor Inteligente.</p></div>
         {can('invoices.create') && <Link to="/facturas/nueva" className="btn primary"><LuPlus /> Nueva factura</Link>}
       </div>
       <div className="toolbar">
@@ -76,7 +76,7 @@ export function InvoiceDetail({ params }) {
 
       {open.length > 0 && live && (
         <div className="callout danger" style={{ marginBottom: 16, flexDirection: 'column', gap: 8 }}>
-          <b><LuTriangleAlert style={{ verticalAlign: -3 }} /> {open.length} alerta(s) del motor de IA en esta factura</b>
+          <b><LuTriangleAlert style={{ verticalAlign: -3 }} /> {open.length} alerta(s) del Auditor Inteligente en esta factura</b>
           {open.map((a) => <div key={a.id}><SevBadge sev={a.severity} /> <b>{a.title}</b> — {a.detail}</div>)}
         </div>
       )}
@@ -209,7 +209,7 @@ export function InvoiceNew() {
           </div>
         </Card>
         <Card title="Resumen" icon={LuCircleCheck}>
-          <Field label="Descuento (%)" hint={can('invoices.discount') ? 'Máx. 50%. Descuentos ≥ 15% generan alerta de IA.' : 'Requiere autorización: solicita el descuento a Gerencia desde la factura emitida.'}>
+          <Field label="Descuento (%)" hint={can('invoices.discount') ? 'Máx. 50%. Descuentos ≥ 15% generan una alerta del Auditor Inteligente.' : 'Requiere autorización: solicita el descuento a Gerencia desde la factura emitida.'}>
             {can('invoices.discount') ? <input type="number" min={0} max={50} value={pct} onChange={(e) => setPct(e.target.value)} />
               : <Button locked onClick={() => post('/api/invoices', { kind, discount_pct: 10, items: [] }).catch(() => {})}>Aplicar descuento</Button>}
           </Field>
@@ -232,7 +232,7 @@ export function InvoiceNew() {
       )}
       {justify !== null && (
         <Modal title="Autorizar factura duplicada" onClose={() => setJustify(null)} footer={<><Button onClick={() => setJustify(null)}>Cancelar</Button><Button variant="primary" disabled={justify.length < 10 || busy} onClick={() => { const j = justify; setJustify(null); submit(j); }}>Emitir con justificación</Button></>}>
-          <p className="muted">Quedará registrado en la bitácora y el motor de IA marcará la factura para revisión.</p>
+          <p className="muted">Quedará registrado en la bitácora y el Auditor Inteligente marcará la factura para revisión.</p>
           <Field label="Justificación (mín. 10 caracteres)"><textarea rows={3} value={justify} onChange={(e) => setJustify(e.target.value)} /></Field>
         </Modal>
       )}

@@ -149,7 +149,7 @@ export function adminRoutes(r) {
   r.put('/api/audit/:id', auth, immutable);
   r.patch('/api/audit/:id', auth, immutable);
 
-  // ---------- Motor de IA (PRD 1.5.1) ----------
+  // ---------- Auditor Inteligente (PRD 1.5.1) ----------
   r.get('/api/ai/anomalies', auth, perm('ai.view'), (ctx) => {
     const rows = listAnomalies({ status: ctx.query.status });
     return { anomalies: rows, summary: summarize(rows) };

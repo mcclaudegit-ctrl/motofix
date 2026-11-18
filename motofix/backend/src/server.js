@@ -20,8 +20,8 @@ server.listen(config.port, () => {
   console.log(`  Frontend: ${config.staticDir}\n`);
 });
 
-// El motor de IA vigila de forma continua: re-evalúa cada 30 s (idempotente).
-setInterval(() => { try { detect(); } catch (e) { console.error('[ia]', e); } }, 30_000).unref();
+// El Auditor Inteligente vigila de forma continua: re-evalúa cada 30 s (idempotente).
+setInterval(() => { try { detect(); } catch (e) { console.error('[auditor-inteligente]', e); } }, 30_000).unref();
 
 // Reporte automático semanal de riesgo CxP (revisa cada hora si toca generarlo).
 setInterval(() => { try { runScheduledReports(); } catch (e) { console.error('[cxp-reportes]', e); } }, 3_600_000).unref();

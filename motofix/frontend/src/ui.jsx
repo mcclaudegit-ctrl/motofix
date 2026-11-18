@@ -107,7 +107,7 @@ export function SecurityModal({ event, onClose, extra }) {
           )}
           <div className={`callout ${dup ? 'warn' : 'danger'}`} style={{ textAlign: 'left', marginTop: 12 }}>
             <LuTriangleAlert size={16} />
-            <span>{dup ? 'El intento quedó registrado y el motor de IA generó una alerta.' : 'El intento fue registrado en la bitácora de auditoría y notificado a Administración, Gerencia y Contabilidad.'}</span>
+            <span>{dup ? 'El intento quedó registrado y el Auditor Inteligente generó una alerta.' : 'El intento fue registrado en la bitácora de auditoría y notificado a Administración, Gerencia y Contabilidad.'}</span>
           </div>
         </div>
         <div className="modal-f" style={{ justifyContent: 'center' }}>{extra}<Button variant="dark" onClick={onClose} autoFocus>Entendido</Button></div>

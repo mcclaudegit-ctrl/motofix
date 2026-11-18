@@ -1,6 +1,6 @@
 # MotoFix · Gestión de taller de motocicletas
 
-Aplicación web (backend + frontend) construida a partir del PRD y WBS de MotoFix: facturación con control anti-duplicación, inventario con ajuste automático, control de accesos por roles (RBAC), bitácora de auditoría inmutable y un motor de IA para detectar anomalías financieras, con monitor de cruce NIIF 15.
+Aplicación web (backend + frontend) construida a partir del PRD y WBS de MotoFix: facturación con control anti-duplicación, inventario con ajuste automático, control de accesos por roles (RBAC), bitácora de auditoría inmutable y el Auditor Inteligente para detectar anomalías financieras, con monitor de cruce NIIF 15.
 
 ## Inicio rápido
 
@@ -11,7 +11,7 @@ cd backend
 npm start          # → http://localhost:4000
 ```
 
-La primera vez, si la base está vacía, carga ~60 días de datos sintéticos (clientes, órdenes, facturas, compras, y anomalías «plantadas» para demostrar el motor de IA). Para regenerarlos: `npm run seed`.
+La primera vez, si la base está vacía, carga ~60 días de datos sintéticos (clientes, órdenes, facturas, compras, y anomalías «plantadas» para demostrar el Auditor Inteligente). Para regenerarlos: `npm run seed`.
 
 **Cuentas demo** (contraseña `MotoFix2026!`): `admin@`, `gerente@`, `contador@`, `recepcionista@`, `ventas@`, `proveedor1@`, `proveedor2@`, `proveedor3@` + `motofix.demo`.
 En la pantalla de acceso hay botones de ingreso directo, y arriba a la derecha el **selector de rol («Modo demo · ver como»)** para cambiar de perfil en caliente.
@@ -22,7 +22,7 @@ En la pantalla de acceso hay botones de ingreso directo, y arriba a la derecha e
 |---|---|
 | Pop-up de seguridad | Entra como **Recepcionista** → Facturas → abre una → «Anular factura» (botón con candado) |
 | Guardia de navegación | Como Recepcionista, abre `/auditoria` |
-| Escaneo de IA | Entra como **Contador** → Motor de IA → «Escanear facturas»: recorre las facturas y resalta en rojo las sospechosas |
+| Escaneo del Auditor Inteligente | Entra como **Contador** → Auditor Inteligente → «Escanear facturas»: recorre las facturas y resalta en rojo las sospechosas |
 | Anti-duplicación | Emite dos veces la misma factura de venta el mismo día |
 | Flujo de aprobación | Contador solicita anulación o descuento → Gerente la resuelve (nadie aprueba su propia solicitud) |
 | Matriz de permisos | **Admin** → Control de accesos: quita un permiso y cambia de rol para ver el efecto inmediato |
@@ -85,7 +85,7 @@ Con la integración de Turso del Marketplace de Vercel (*Storage → Create Data
 También se puede hacer desde tu computadora: `cd backend && TURSO_DATABASE_URL=… TURSO_AUTH_TOKEN=… npm run turso:init`.
 
 **Diferencias frente al servidor propio**
-- El motor de IA se re-evalúa al consultar el dashboard, las notificaciones o el módulo de IA (máximo una vez por minuto), después de cada factura, y en un cron diario (`/api/cron/tick`, el plan Hobby permite uno al día). El reporte semanal de riesgo se genera desde ese cron.
+- El Auditor Inteligente se re-evalúa al consultar el dashboard, las notificaciones o su módulo (máximo una vez por minuto), después de cada factura, y en un cron diario (`/api/cron/tick`, el plan Hobby permite uno al día). El reporte semanal de riesgo se genera desde ese cron.
 - Vercel limita cada solicitud a 4,5 MB: las importaciones de más de 3 MB se suben solas por partes (`/api/ap/import/chunk`), hasta 20 MB en total. La lectura de PDF acepta hasta 4 MB.
 - El límite de intentos de inicio de sesión es por instancia.
 - El plan Hobby de Vercel es solo para uso personal y no comercial.
@@ -98,7 +98,7 @@ También se puede hacer desde tu computadora: `cd backend && TURSO_DATABASE_URL=
 |---|---|
 | 1.1.1 Selector de rol | Barra superior (modo demo) |
 | 1.1.2 Sidebar dinámico | Menú generado según permisos del rol |
-| 1.1.3 Dashboard + alertas IA | `/` (ejecutivo para Admin/Gerente/Contador; operativo para Recepción/Ventas); sondeo cada 10 s |
+| 1.1.3 Dashboard + alertas del Auditor Inteligente | `/` (ejecutivo para Admin/Gerente/Contador; operativo para Recepción/Ventas); sondeo cada 10 s |
 | 1.1.4 Pop-ups de permiso denegado | Modal de seguridad ante cualquier 403 / duplicado / intento de alterar la bitácora |
 | 1.2.1–1.2.2 Perfiles internos/externos | `/accesos` (usuarios; máx. **3** externos) y `/portal` |
 | 1.2.3 Guardias y botones por privilegio | Rutas con permisos + botones ocultos o bloqueados; **el servidor siempre revalida** |
@@ -107,7 +107,7 @@ También se puede hacer desde tu computadora: `cd backend && TURSO_DATABASE_URL=
 | 1.3.3 Validador anti-duplicación | Hash SHA-256 (cliente + líneas + monto + día) y consecutivo; el Gerente puede autorizar un duplicado legítimo con justificación |
 | 1.3.4 Anulaciones / descuentos | `/aprobaciones` (segregación de funciones) |
 | 1.4.1–1.4.3 Inventario | Catálogo, ajuste automático por factura/compra/anulación, discrepancia repuestos usados vs. facturados |
-| 1.5.1 Motor de IA | 20+ reglas: duplicados, montos atípicos (z-score robusto en escala log), horarios, consecutivos faltantes, descuentos, ráfagas, accesos denegados repetidos, permisos alterados, proveedores… |
+| 1.5.1 Auditor Inteligente | 20+ reglas: duplicados, montos atípicos (z-score robusto en escala log), horarios, consecutivos faltantes, descuentos, ráfagas, accesos denegados repetidos, permisos alterados, proveedores… |
 | 1.5.2 Bitácora inmutable | Tabla append-only con **triggers SQL** + cadena de hashes SHA-256 verificable |
 | 1.5.3 Monitor NIIF 15 | Orden de trabajo vs. factura: reconocimiento prematuro, sin facturar, diferencias, descuentos sin aprobar |
 | 1.6.x Datos | SQLite (`backend/data/motofix.db`), eventos de auditoría y mock data sintética (`backend/src/seed.js`) |
@@ -121,7 +121,7 @@ backend/   Node 22 sin dependencias: node:http + node:sqlite + node:crypto
   src/lib/        mini-framework HTTP, JWT HS256, scrypt, validación
   src/auth.js     autenticación + RBAC (bloquea, registra y notifica)
   src/audit.js    bitácora encadenada
-  src/anomaly.js  motor de IA     src/niif15.js  monitor contable
+  src/anomaly.js  Auditor Inteligente     src/niif15.js  monitor contable
   src/services/   reglas de negocio de facturación
   src/routes/     API REST        test/  34 pruebas (npm test)
 frontend/  React 19 + esbuild (iconos: react-icons)
@@ -134,7 +134,7 @@ Para modificar el frontend: `cd frontend && npm install && npm run build` (o `np
 
 - `DEMO_MODE=false` y `AUTO_SEED=false` (ver `backend/.env.example`), `JWT_SECRET` propio y contraseñas nuevas para todas las cuentas.
 - Publicar detrás de **HTTPS** (Caddy/nginx) con `TRUST_PROXY=true` para registrar la IP real.
-- La «IA» es **estadística y reglas explicables** (sin modelo de lenguaje): cada alerta indica por qué se generó y es idempotente. Se puede ampliar con un modelo de ML sobre el mismo flujo.
+- El **Auditor Inteligente** (antes «motor de IA») es **estadística y reglas explicables** (sin modelo de lenguaje): cada alerta indica por qué se generó y es idempotente. Se puede ampliar con un modelo de ML sobre el mismo flujo.
 - El monitor NIIF 15 es una ayuda de control interno; no sustituye el criterio del contador.
 - SQLite en un solo proceso es adecuado para un taller; en la nube se usa Turso (ver «Publicar en Vercel»).
 - `node:sqlite` es API experimental de Node 22 (el aviso se silencia en los scripts).

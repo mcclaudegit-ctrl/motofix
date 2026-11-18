@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { LuScanLine, LuTriangleAlert, LuCheck, LuX, LuRotateCcw, LuBrainCircuit, LuShieldCheck } from 'react-icons/lu';
+import { LuScanLine, LuTriangleAlert, LuCheck, LuX, LuRotateCcw, LuShieldCheck } from 'react-icons/lu';
 import { get, post, patch } from '../lib/api.js';
 import { useAuth } from '../lib/auth.jsx';
 import { Link } from '../lib/router.jsx';
@@ -49,11 +49,11 @@ export default function AiEngine() {
 
   return (
     <>
-      <div className="page-head"><div><h1>Motor de IA · detección de anomalías</h1><p>Combina estadística robusta, reglas de negocio y análisis de la bitácora para señalar duplicados, montos atípicos, horarios inconsistentes, descuentos y alteraciones de permisos.</p></div>
-        <Button variant="primary" icon={LuScanLine} locked={!can('ai.scan')} trackAs={['boton', 'Escanear facturas (IA)']} onClick={start} disabled={scan && !scan.done}>Escanear facturas</Button></div>
+      <div className="page-head"><div><h1>Auditor Inteligente · detección de anomalías</h1><p>Combina estadística robusta, reglas de negocio y análisis de la bitácora para señalar duplicados, montos atípicos, horarios inconsistentes, descuentos y alteraciones de permisos.</p></div>
+        <Button variant="primary" icon={LuScanLine} locked={!can('ai.scan')} trackAs={['boton', 'Escanear facturas (Auditor Inteligente)']} onClick={start} disabled={scan && !scan.done}>Escanear facturas</Button></div>
 
       {scan && (
-        <Card title={scan.done ? 'Escaneo completado' : 'Escaneando facturas…'} icon={LuBrainCircuit} className="" >
+        <Card title={scan.done ? 'Escaneo completado' : 'Escaneando facturas…'} icon={LuShieldCheck} className="" >
           <div className="scan">
             <div className="progress" aria-label="Progreso"><i style={{ width: `${(scan.idx / scan.invoices.length) * 100}%` }} /></div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>

@@ -117,7 +117,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); out
 .hbar > b { font-weight: 500; text-align: right; }
 .hbar .track { height: 6px; background: var(--line-2); border-radius: 3px; overflow: hidden; } .hbar .fill { height: 100%; background: var(--ink-2); border-radius: 3px; }
 
-/* ---------- Alertas IA ---------- */
+/* ---------- Alertas del Auditor Inteligente ---------- */
 .alert-item { display: flex; gap: 14px; padding: 14px 20px; border-bottom: 1px solid var(--line-2); align-items: flex-start; }
 .alert-item:last-child { border-bottom: 0; }
 .alert-item .ico { width: 18px; height: 22px; display: grid; place-items: center; flex: none; background: none; }

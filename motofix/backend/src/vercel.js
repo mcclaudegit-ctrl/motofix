@@ -21,14 +21,14 @@ if (!isRemote && config.autoSeed && !get('SELECT COUNT(*) n FROM users').n) {
 
 const handle = createHandler(buildRouter());
 
-// El motor de IA re-evalúa como máximo una vez por minuto por instancia (es idempotente).
+// El Auditor Inteligente re-evalúa como máximo una vez por minuto por instancia (es idempotente).
 const DETECT_EVERY_MS = 60_000;
 let lastDetect = 0;
 let lastCron = 0;
 function maybeDetect() {
   if (Date.now() - lastDetect < DETECT_EVERY_MS) return;
   lastDetect = Date.now();
-  try { detect(); } catch (e) { console.error('[ia]', e); }
+  try { detect(); } catch (e) { console.error('[auditor-inteligente]', e); }
 }
 
 function json(res, status, body) {
@@ -46,10 +46,10 @@ export default async function handler(req, res) {
     req.url = url.pathname + (url.search || '');
   }
 
-  // Cron de Vercel (diario en plan Hobby): motor de IA + reporte semanal de riesgo.
+  // Cron de Vercel (diario en plan Hobby): Auditor Inteligente + reporte semanal de riesgo.
   if (req.url.split('?')[0] === '/api/cron/tick') {
     // Con CRON_SECRET definido, solo el cron de Vercel (que envía ese secreto) puede llamarlo.
-    // Sin él queda abierto, pero es inofensivo: el motor de IA es idempotente, el reporte se genera
+    // Sin él queda abierto, pero es inofensivo: el Auditor Inteligente es idempotente, el reporte se genera
     // como máximo una vez por semana y la llamada se limita a una cada 10 minutos por instancia.
     if (config.cronSecret && req.headers.authorization !== `Bearer ${config.cronSecret}`) return json(res, 401, { error: 'NO_AUTORIZADO' });
     if (!config.cronSecret && Date.now() - lastCron < 10 * 60_000) return json(res, 429, { error: 'DEMASIADAS_SOLICITUDES', message: 'Intenta de nuevo en unos minutos' });

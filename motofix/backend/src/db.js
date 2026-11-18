@@ -298,6 +298,13 @@ BEGIN SELECT RAISE(ABORT, 'audit_log es inmutable: no se permite eliminar regist
 `;
 db.exec(TRIGGERS_SQL);
 
+// Rebranding «IA» → «Auditor Inteligente» (18-11-2026): corrige las notificaciones ya guardadas.
+// Idempotente: después de la primera vez ya no hay filas que coincidan. La bitácora (audit_log) no se toca.
+db.exec(`
+UPDATE notifications SET title = 'Alerta del Auditor Inteligente: ' || substr(title, 12) WHERE title LIKE 'Alerta IA: %';
+UPDATE notifications SET link = '/auditor-inteligente' WHERE link = '/ia';
+`);
+
 /** Borra TODOS los datos (solo para re-sembrar). Desactiva temporalmente los triggers de inmutabilidad. */
 export function resetData() {
   db.exec('DROP TRIGGER IF EXISTS audit_no_update; DROP TRIGGER IF EXISTS audit_no_delete; PRAGMA foreign_keys = OFF;');

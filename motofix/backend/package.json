@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "API de MotoFix: facturación, inventario, RBAC, auditoría inmutable e IA de anomalías (sin dependencias externas)",
+  "description": "API de MotoFix: facturación, inventario, RBAC, auditoría inmutable y Auditor Inteligente de anomalías (sin dependencias externas)",
   "scripts": {
     "start": "node --disable-warning=ExperimentalWarning src/server.js",
     "dev": "node --disable-warning=ExperimentalWarning --watch src/server.js",

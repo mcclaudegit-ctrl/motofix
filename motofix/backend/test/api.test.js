@@ -178,7 +178,7 @@ test('bitácora: inmutable por API y por triggers SQL, cadena íntegra', async (
   assert.equal(v.body.ok, true);
 });
 
-test('motor de IA: escaneo, alertas y NIIF 15', async () => {
+test('Auditor Inteligente: escaneo, alertas y NIIF 15', async () => {
   const c = await login('contador');
   const scan = await call('POST', '/api/ai/scan', c);
   assert.equal(scan.status, 200);

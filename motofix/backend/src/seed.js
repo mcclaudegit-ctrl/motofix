@@ -1,7 +1,7 @@
 // Repositorio de Mock Data Sintética (PRD 1.6.3).
 // Genera ~60 días de operación ficticia de un taller en Costa Rica (₡) pasando por los MISMOS servicios
 // que usa la API (hash anti-duplicación, stock, bitácora encadenada), y planta anomalías conocidas para
-// demostrar el motor de IA, el monitor NIIF 15 y los controles de acceso. Todo es ficticio.
+// demostrar el Auditor Inteligente, el monitor NIIF 15 y los controles de acceso. Todo es ficticio.
 import { fileURLToPath } from 'node:url';
 import { all, get, run, resetData } from './db.js';
 import { config } from './config.js';
@@ -330,12 +330,12 @@ export async function seed({ reset = false } = {}) {
   // Cuentas por pagar: maestro, facturas con anomalías plantadas, aprobaciones y bandeja simulada
   await seedAp(U, at);
 
-  // Primera pasada del motor de IA sobre todo el histórico
+  // Primera pasada del Auditor Inteligente sobre todo el histórico
   detect();
   run('UPDATE notifications SET read=1');
   run("UPDATE notifications SET read=0 WHERE id IN (SELECT id FROM notifications WHERE audience='security' ORDER BY id DESC LIMIT 6)");
   const stats = { invoices: get('SELECT COUNT(*) n FROM invoices').n, audit: get('SELECT COUNT(*) n FROM audit_log').n, anomalies: get('SELECT COUNT(*) n FROM anomalies').n };
-  console.log(`[seed] ${stats.invoices} facturas · ${stats.audit} eventos de auditoría · ${stats.anomalies} alertas de IA`);
+  console.log(`[seed] ${stats.invoices} facturas · ${stats.audit} eventos de auditoría · ${stats.anomalies} alertas del Auditor Inteligente`);
   return stats;
 }
 

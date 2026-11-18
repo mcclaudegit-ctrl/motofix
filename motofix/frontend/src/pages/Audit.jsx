@@ -4,7 +4,7 @@ import { get, del } from '../lib/api.js';
 import { Button, Card, Badge, Empty, Spinner, useLoad, useToast, useDebounced, fmtDate } from '../ui.jsx';
 
 const ACTIONS = { CREACION: ['ok', 'Creación'], MODIFICACION: ['brand', 'Modificación'], ELIMINACION: ['danger', 'Eliminación'], LOGIN: ['dark', 'Login'], LOGOUT: ['', 'Logout'], ACCESO_DENEGADO: ['danger', 'Acceso denegado'], DUPLICADO_BLOQUEADO: ['warn', 'Duplicado bloqueado'],
-  APROBACION: ['ok', 'Aprobación'], ESCANEO_IA: ['brand', 'Escaneo IA'], EXPORTACION: ['warn', 'Exportación'], NAVEGACION: ['', 'Navegación'], CLICK: ['', 'Clic'] };
+  APROBACION: ['ok', 'Aprobación'], ESCANEO_IA: ['brand', 'Escaneo del Auditor Inteligente'], EXPORTACION: ['warn', 'Exportación'], NAVEGACION: ['', 'Navegación'], CLICK: ['', 'Clic'] };
 const ROLES = { admin: 'Administrador', gerente: 'Gerente', contador: 'Contador', recepcionista: 'Recepcionista', ventas: 'Ventas', proveedor: 'Proveedor' };
 
 export default function Audit() {

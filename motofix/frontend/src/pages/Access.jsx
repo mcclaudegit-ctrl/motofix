@@ -26,7 +26,7 @@ export default function Access() {
 
   return (
     <>
-      <div className="page-head"><div><h1>Control de accesos</h1><p>Asigna y revoca permisos por perfil. Los cambios aplican de inmediato, quedan en la bitácora y son vigilados por el motor de IA.</p></div></div>
+      <div className="page-head"><div><h1>Control de accesos</h1><p>Asigna y revoca permisos por perfil. Los cambios aplican de inmediato, quedan en la bitácora y son vigilados por el Auditor Inteligente.</p></div></div>
       <div className="tabs">{can('permissions.manage') && <button className={`tab ${tab === 'matriz' ? 'on' : ''}`} onClick={() => setTab('matriz')}>Matriz de permisos</button>}{can('users.manage') && <button className={`tab ${tab === 'usuarios' ? 'on' : ''}`} onClick={() => setTab('usuarios')}>Usuarios</button>}</div>
 
       {tab === 'matriz' && (!p ? <Spinner /> : <>
