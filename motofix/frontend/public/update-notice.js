@@ -29,14 +29,14 @@
     banner.setAttribute('role', 'alert');
     banner.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483000;width:min(560px,calc(100vw - 20px));'
       + 'background:#24292d;color:#fff;border-radius:12px;box-shadow:0 16px 40px rgba(20,24,27,.22);padding:14px 16px;'
-      + 'font:500 14px/1.4 "Archivo",system-ui,sans-serif;display:flex;gap:12px;align-items:center;flex-wrap:wrap';
+      + 'font:500 14px/1.4 "Manrope",system-ui,sans-serif;display:flex;gap:12px;align-items:center;flex-wrap:wrap';
     const msg = document.createElement('div');
     msg.style.cssText = 'flex:1 1 240px';
     const title = document.createElement('b'); title.textContent = 'Hay una nueva versión de MotoFix.';
     const text = document.createElement('span');
     msg.append(title, document.createElement('br'), text);
     const btn = (label, primary) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = label;
-      b.style.cssText = `border:0;border-radius:8px;padding:8px 12px;font:600 13px "Archivo",system-ui,sans-serif;cursor:pointer;${primary ? 'background:#1d6f9a;color:#fff' : 'background:transparent;color:#e1e3e0;border:1px solid #5a6268'}`; return b; };
+      b.style.cssText = `border:0;border-radius:8px;padding:8px 12px;font:600 13px "Manrope",system-ui,sans-serif;cursor:pointer;${primary ? 'background:#1d6f9a;color:#fff' : 'background:transparent;color:#e1e3e0;border:1px solid #5a6268'}`; return b; };
     const now = btn('Actualizar ahora', true);
     const later = btn('En 5 minutos', false);
     now.onclick = () => location.reload();

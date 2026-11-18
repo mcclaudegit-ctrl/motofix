@@ -1,6 +1,6 @@
 /*
   MotoFix · sistema visual «taller limpio»
-  Una sola familia (Archivo, variable en ancho): expandida para títulos y cifras, normal para el resto.
+  Una sola familia: Manrope. Peso 700 para títulos y cifras, 400–600 para el resto.
   Color: neutros de aluminio y asfalto; el azul solo marca acciones y lo activo; el estado va en texto, no en fondos.
 */
 :root {
@@ -9,8 +9,8 @@
   --bg: #f2f3f1; --surface: #fff; --line: #e1e3e0; --line-2: #ecedeb; --hover: #f7f8f6;
   --danger: #b5362c; --danger-l: #fbefed; --warn: #9a5d0a; --warn-l: #fbf4e7; --ok: #2c7651; --ok-l: #edf6f1;
   --radius: 12px; --radius-s: 8px; --shadow: none;
-  --display: 'Archivo', 'Segoe UI', system-ui, sans-serif; --body: 'Archivo', 'Segoe UI', system-ui, sans-serif; --mono: 'Archivo', 'Segoe UI', system-ui, sans-serif;
-  --wide: 118%;
+  --display: 'Manrope', 'Segoe UI', system-ui, sans-serif; --body: 'Manrope', 'Segoe UI', system-ui, sans-serif; --mono: 'Manrope', 'Segoe UI', system-ui, sans-serif;
+  --wide: 100%;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; font-feature-settings: 'tnum' 0; }
@@ -26,7 +26,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
 .sidebar { background: var(--bg); border-right: 1px solid var(--line); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
 .brand { display: flex; align-items: center; gap: 10px; padding: 22px 22px 18px; }
-.brand img { width: 34px; height: 34px; object-fit: contain; }
+.brand .mark { width: 32px; height: 32px; flex: none; }
 .wordmark { font-family: var(--display); font-stretch: var(--wide); font-weight: 700; font-size: 21px; color: var(--ink); } .wordmark b { color: var(--brand); font-weight: 700; }
 .nav { padding: 0 12px 22px; display: flex; flex-direction: column; gap: 1px; }
 .nav-group { font-size: 12.5px; font-weight: 500; color: var(--faint); padding: 18px 10px 6px; }
@@ -47,7 +47,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--ink); color: #fff; display: grid; place-items: center; font-family: var(--display); font-stretch: var(--wide); font-weight: 600; font-size: 12px; }
 .content { padding: 18px 36px 72px; max-width: 1440px; width: 100%; }
 .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 28px; flex-wrap: wrap; }
-.page-head h1 { font-size: 30px; line-height: 1.15; font-weight: 600; font-stretch: var(--wide); }
+.page-head h1 { font-size: 30px; line-height: 1.15; font-weight: 700; letter-spacing: -.015em; font-stretch: var(--wide); }
 .page-head p { margin: 8px 0 0; color: var(--muted); max-width: 64ch; }
 .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
@@ -103,7 +103,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); out
 .kpi { padding: 18px 20px 20px; }
 .kpi .label { font-size: 13.5px; font-weight: 500; color: var(--muted); }
 .kpi .label svg { display: none; }
-.kpi .value { font-family: var(--display); font-stretch: var(--wide); font-weight: 600; font-size: 32px; line-height: 1.1; margin: 10px 0 8px; font-variant-numeric: tabular-nums; }
+.kpi .value { font-family: var(--display); font-stretch: var(--wide); font-weight: 700; font-size: 31px; letter-spacing: -.02em; line-height: 1.1; margin: 10px 0 8px; font-variant-numeric: tabular-nums; }
 .kpi .sub { font-size: 13px; color: var(--muted); line-height: 1.45; }
 .kpi .sub .badge { font-size: 12.5px; margin-right: 8px; }
 .kpi.alert .value { color: var(--danger); }
@@ -160,10 +160,31 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); out
 /* ---------- Inicio de sesión ---------- */
 .login { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
 .login-art { background: var(--bg); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 48px; position: relative; overflow: hidden; text-align: center; }
-.login-art img { width: min(420px, 80%); } .login-art p { color: var(--muted); max-width: 38ch; margin-top: 10px; font-size: 16px; }
-.gear-bg { display: none; }
+.login-art p { color: var(--muted); max-width: 36ch; margin-top: 14px; font-size: 16px; }
+.login-art .mark { width: 132px; height: 132px; overflow: visible; }
+.login-wm { font-family: var(--display); font-weight: 800; font-size: 46px; line-height: 1; letter-spacing: -.02em; margin-top: 20px; display: flex; color: var(--ink); }
+.login-wm span { display: inline-block; } .login-wm .fix { color: var(--brand); }
+
+/* ---------- Marca (engranaje + aro + check) ---------- */
+.mark .m-gear { fill: var(--ink); stroke: var(--ink); stroke-width: 3; stroke-linejoin: round; }
+.mark .m-hole { fill: var(--bg); }
+.mark .m-ring { fill: none; stroke: var(--brand); stroke-width: 7; }
+.mark .m-check { fill: none; stroke: var(--brand); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
+/* Animación del login, una sola vez (~2,3 s): el engranaje se dibuja y «aprieta» como una tuerca,
+   se traza el aro, luego el check de auditoría y por último sube el nombre. */
+.mark.play path, .mark.play .m-ring { stroke-dasharray: 1; }
+.mark.play .m-gear { transform-origin: 0 0; animation: m-draw .9s cubic-bezier(.3,.7,.2,1) both, m-tighten 1.1s cubic-bezier(.2,.9,.25,1.12) both, m-fill .35s ease-out .8s both; }
+.mark.play .m-ring { animation: m-draw .55s ease-out .75s both; }
+.mark.play .m-check { animation: m-draw .4s cubic-bezier(.5,0,.3,1) 1.25s both; }
+.mark.play ~ .login-wm span { animation: m-rise .5s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(1.5s + var(--i) * 40ms); }
+.mark.play ~ p { animation: m-fade .6s ease-out 1.95s both; }
+@keyframes m-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes m-tighten { from { transform: rotate(-75deg); } to { transform: rotate(0); } }
+@keyframes m-fill { from { fill-opacity: 0; } to { fill-opacity: 1; } }
+@keyframes m-rise { from { opacity: 0; transform: translateY(.45em); } }
+@keyframes m-fade { from { opacity: 0; } }
 .login-form { background: var(--surface); padding: 48px max(48px, calc((100% - 460px) / 2)); display: flex; flex-direction: column; justify-content: center; }
-.login-form h1 { font-stretch: var(--wide); font-size: 30px !important; }
+.login-form h1 { font-weight: 700; letter-spacing: -.015em; font-size: 30px !important; }
 .role-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 16px; margin-top: 10px; border-top: 1px solid var(--line-2); }
 .role-card { text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line-2); border-radius: 0; padding: 10px 4px; cursor: pointer; display: flex; flex-direction: column; gap: 1px; transition: background .12s; } .role-card:hover { background: var(--hover); } .role-card b { font-size: 14px; font-weight: 600; } .role-card span { font-size: 12.5px; color: var(--muted); }
 .error-box { background: var(--danger-l); color: var(--danger); border-radius: var(--radius-s); padding: 10px 12px; margin-bottom: 14px; font-weight: 500; }
@@ -180,7 +201,7 @@ input:focus, select:focus, textarea:focus { outline: 2px solid var(--brand); out
   .app { grid-template-columns: 1fr; } .sidebar { position: fixed; left: 0; top: 0; z-index: 60; width: 270px; transform: translateX(-100%); transition: transform .2s; } .sidebar.open { transform: none; box-shadow: 0 0 40px rgba(0,0,0,.2); }
   .btn.menu-btn { display: inline-flex; } .topbar { padding: 10px 14px; flex-wrap: wrap; } .content { padding: 14px 16px 50px; } .g2, .g4 { grid-template-columns: 1fr; }
   .page-head h1 { font-size: 25px; }
-  .login { grid-template-columns: 1fr; } .login-art { padding: 28px; } .login-art img { width: 60%; } .login-form { padding: 28px 20px; } .hide-sm { display: none; } .search input { width: 100%; }
+  .login { grid-template-columns: 1fr; } .login-art { padding: 32px 20px; } .login-art .mark { width: 88px; height: 88px; } .login-wm { font-size: 34px; margin-top: 14px; } .login-form { padding: 28px 20px; } .hide-sm { display: none; } .search input { width: 100%; }
 }
 td.mono { white-space: nowrap; }
 

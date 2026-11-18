@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { LuKeyRound, LuSparkles } from 'react-icons/lu';
 import { useAuth } from '../lib/auth.jsx';
 import { get } from '../lib/api.js';
-import { Button, Field } from '../ui.jsx';
+import { Button, Field, LogoMark } from '../ui.jsx';
 
 export default function Login() {
   const { login, demoLogin } = useAuth();
@@ -20,8 +20,8 @@ export default function Login() {
   return (
     <div className="login">
       <div className="login-art">
-        <div className="gear-bg" aria-hidden="true" />
-        <img src="/logo-full.png" alt="MotoFix" />
+        <LogoMark animated />
+        <div className="login-wm" role="img" aria-label="MotoFix">{[...'MotoFix'].map((c, i) => <span key={i} className={i > 3 ? 'fix' : ''} style={{ '--i': i }}>{c}</span>)}</div>
         <p>Facturación, inventario y control de accesos con auditoría inteligente para tu taller.</p>
       </div>
       <div className="login-form">

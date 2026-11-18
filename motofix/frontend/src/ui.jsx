@@ -47,6 +47,25 @@ export const Kpi = ({ label, icon: Icon, value, sub, alert }) => (
   </div>
 );
 
+// Marca de MotoFix: engranaje, aro y check de auditoría. Con `animated` se dibuja una vez al montar (ver .mark.play en styles.css).
+const GEAR = (() => {
+  const teeth = 10, ro = 56, ri = 46, pts = [];
+  for (let i = 0; i < teeth; i++) {
+    const a = (i / teeth) * Math.PI * 2, s = Math.PI / teeth;
+    const at = (t, r) => [Math.cos(a + t) * r, Math.sin(a + t) * r].map((n) => n.toFixed(2)).join(' ');
+    pts.push(at(-s * 0.95, ri), at(-s * 0.55, ro), at(s * 0.55, ro), at(s * 0.95, ri));
+  }
+  return 'M' + pts.join(' L') + ' Z';
+})();
+export const LogoMark = ({ animated, className = '' }) => (
+  <svg className={`mark ${animated ? 'play' : ''} ${className}`} viewBox="-66 -66 132 132" aria-hidden="true">
+    <path className="m-gear" d={GEAR} pathLength="1" />
+    <circle className="m-hole" r="30" />
+    <circle className="m-ring" r="27" pathLength="1" />
+    <path className="m-check" d="M-14 0 L-3 12 L34 -30" pathLength="1" />
+  </svg>
+);
+
 export const Empty = ({ children }) => <div className="empty">{children}</div>;
 export const Spinner = () => <div className="spin" role="status" aria-label="Cargando" />;
 

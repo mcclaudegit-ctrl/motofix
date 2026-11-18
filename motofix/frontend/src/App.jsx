@@ -7,7 +7,7 @@ import {
 import { useAuth } from './lib/auth.jsx';
 import { useRouter, Link, matchPath } from './lib/router.jsx';
 import { get, post, onSecurityEvent, track } from './lib/api.js';
-import { Button, SecurityModal, Spinner, useToast, ago } from './ui.jsx';
+import { Button, SecurityModal, Spinner, useToast, ago, LogoMark } from './ui.jsx';
 import Login from './pages/Login.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import { InvoiceList, InvoiceDetail, InvoiceNew } from './pages/Invoices.jsx';
@@ -97,7 +97,7 @@ function Shell() {
   return (
     <div className="app">
       <aside className={`sidebar ${open ? 'open' : ''}`}>
-        <div className="brand"><img src="/logo-icon.png" alt="" /><span className="wordmark">Moto<b>Fix</b></span></div>
+        <div className="brand"><LogoMark /><span className="wordmark">Moto<b>Fix</b></span></div>
         <nav className="nav" aria-label="Navegación principal">
           {groups.map((g) => {
             const items = ROUTES.filter((r) => r.group === g && can(...r.perms));
