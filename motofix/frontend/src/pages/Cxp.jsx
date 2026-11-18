@@ -157,45 +157,106 @@ export function CxpInvoices() {
 }
 
 // ---------- Registro manual o PDF ----------
+const BLANK = { vendor_name: '', tax_id: '', invoice_number: '', issue_date: '', currency: 'CRC', subtotal: '', tax: '', total: '', category: 'Gastos operativos', bank_account: '', description: '' };
+const DEMO_GROUPS = [
+  { key: 'bajo', label: 'Cumple', hint: 'Cumplen los requisitos: riesgo bajo' },
+  { key: 'medio', label: 'Datos erróneos', hint: 'Tienen datos erróneos: riesgo medio' },
+  { key: 'alto', label: 'No cumple', hint: 'No cumplen los requisitos: riesgo alto' },
+];
+
 export function CxpNew() {
-  const toast = useToast(); const { navigate } = useRouter();
-  const [f, setF] = useState({ vendor_name: '', tax_id: '', invoice_number: '', issue_date: '', currency: 'CRC', subtotal: '', tax: '', total: '', category: 'Gastos operativos', bank_account: '', description: '' });
+  const toast = useToast(); const { navigate } = useRouter(); const { can } = useAuth();
+  const [f, setF] = useState(BLANK);
   const [busy, setBusy] = useState(false);
+  const [group, setGroup] = useState('bajo');
+  const [picked, setPicked] = useState(null); // plantilla aplicada al formulario
+  const [result, setResult] = useState(null); // para roles sin acceso al detalle
+  const catalog = useLoad(() => get('/api/ap/demo-templates'), []);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
+
+  const applyTemplate = async (t) => {
+    setBusy(true);
+    try {
+      const d = await get(`/api/ap/demo-templates/${t.id}`);
+      setF({ ...BLANK, ...Object.fromEntries(Object.entries(d.data).map(([k, v]) => [k, v ?? ''])) });
+      setPicked(d); setResult(null);
+    } catch (err) { toast(err.message, 'err'); } finally { setBusy(false); }
+  };
+  const blank = () => { setF(BLANK); setPicked(null); setResult(null); };
+
   const submit = async (e) => {
     e.preventDefault(); setBusy(true);
-    try { const r = await post('/api/ap/invoices', f); toast('Factura registrada y analizada', 'ok'); navigate(`/cxp/facturas/${r.invoice.id}`); }
-    catch (err) { toast(err.message, 'err'); } finally { setBusy(false); }
+    try {
+      const r = await post('/api/ap/invoices', f);
+      toast('Factura registrada y analizada', 'ok');
+      if (can('ap.view')) navigate(`/cxp/facturas/${r.invoice.id}`);
+      else { setResult(r.invoice); setF(BLANK); setPicked(null); }
+    } catch (err) { toast(err.message, 'err'); } finally { setBusy(false); }
   };
   const pdf = async (e) => {
     const file = e.target.files?.[0]; if (!file) return; setBusy(true);
     try { const r = await sendRaw(`/api/ap/invoices/pdf?name=${encodeURIComponent(file.name)}`, file); toast('PDF leído. Revisa los datos antes de aprobar.', 'ok'); navigate(`/cxp/facturas/${r.invoice.id}`); }
     catch (err) { toast(err.message, 'err'); } finally { setBusy(false); e.target.value = ''; }
   };
+  const list = catalog.data?.templates?.[group] || [];
+
   return (
     <>
-      <Head title="Registrar factura" text="Captura manual o lectura de PDF. Los datos se estandarizan automáticamente y cada corrección queda en la bitácora." />
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(320px,2fr) minmax(260px,1fr)', gap: 18, alignItems: 'start' }}>
-        <Card title="Captura manual">
-          <form onSubmit={submit} style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))' }}>
-            <Field label="Proveedor *"><input required value={f.vendor_name} onChange={set('vendor_name')} /></Field>
-            <Field label="Cédula" hint="Solo dígitos o con guiones; se estandariza"><input value={f.tax_id} onChange={set('tax_id')} /></Field>
-            <Field label="Número de factura *"><input required value={f.invoice_number} onChange={set('invoice_number')} /></Field>
-            <Field label="Fecha de emisión *"><input type="date" required value={f.issue_date} onChange={set('issue_date')} /></Field>
-            <Field label="Moneda"><select value={f.currency} onChange={set('currency')}><option value="CRC">Colones (₡)</option><option value="USD">Dólares ($)</option></select></Field>
-            <Field label="Categoría"><select value={f.category} onChange={set('category')}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></Field>
-            <Field label="Subtotal" hint="Si lo dejas vacío se calcula desde el total"><input value={f.subtotal} onChange={set('subtotal')} /></Field>
-            <Field label="IVA"><input value={f.tax} onChange={set('tax')} /></Field>
-            <Field label="Total *"><input required value={f.total} onChange={set('total')} /></Field>
-            <Field label="Cuenta bancaria"><input value={f.bank_account} onChange={set('bank_account')} /></Field>
-            <Field label="Descripción"><input value={f.description} onChange={set('description')} /></Field>
-            <div style={{ gridColumn: '1 / -1' }}><Button type="submit" variant="primary" icon={LuCheck} disabled={busy}>Registrar y analizar</Button></div>
-          </form>
+      <Head title="Registrar factura" text="Elige una factura de demostración para llenar el formulario, o empieza una en blanco. Los datos se estandarizan y cada corrección queda en la bitácora." />
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px,1fr) minmax(320px,1.6fr)', gap: 20, alignItems: 'start' }}>
+        <Card title="Facturas de demostración" flush actions={<Button size="sm" onClick={blank}>Factura en blanco</Button>}>
+          <div className="tabs" role="tablist" style={{ padding: '0 20px', marginBottom: 0 }}>
+            {DEMO_GROUPS.map((g) => (
+              <button key={g.key} role="tab" aria-selected={group === g.key} className={`tab ${group === g.key ? 'on' : ''}`} onClick={() => setGroup(g.key)}>{g.label}</button>
+            ))}
+          </div>
+          <p className="muted" style={{ fontSize: 13, margin: '10px 20px 4px' }}>{DEMO_GROUPS.find((g) => g.key === group).hint}. Cada vez se generan un número de factura y una fecha nuevos.</p>
+          {catalog.loading && !catalog.data ? <Spinner /> : (
+            <div role="list">
+              {list.map((t) => (
+                <button key={t.id} role="listitem" className={`demo-item ${picked?.id === t.id ? 'on' : ''}`} onClick={() => applyTemplate(t)} disabled={busy}>
+                  <b>{t.title}</b><span>{t.why}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </Card>
-        <Card title="Leer factura en PDF">
-          <p className="muted" style={{ fontSize: 13 }}>Un proveedor de IA gratuito extrae los campos del PDF. Toda factura leída así requiere revisión humana antes de aprobarse.</p>
-          <label className="btn" style={{ cursor: 'pointer' }}><LuUpload /> Elegir PDF<input type="file" accept="application/pdf" onChange={pdf} hidden disabled={busy} /></label>
-        </Card>
+
+        <div style={{ display: 'grid', gap: 20 }}>
+          {result && (
+            <div className="callout ok"><LuCheck size={16} /><span>Factura <b>{result.invoice_number}</b> registrada con <RiskBadge level={result.risk_level} score={result.risk_score} />. Contabilidad la revisará en Cuentas por pagar.</span></div>
+          )}
+          <Card title={picked ? `Demostración: ${picked.title}` : 'Captura manual'}>
+            {picked && (
+              <div className="callout" style={{ marginBottom: 16 }}>
+                <LuShieldCheck size={16} />
+                <span>Riesgo previsto al registrarla: <RiskBadge level={picked.prediction.level} score={picked.prediction.score} />
+                  {picked.prediction.findings.length > 0 && <><br />{picked.prediction.findings.join(' · ')}</>}</span>
+              </div>
+            )}
+            <form onSubmit={submit} style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))' }}>
+              <Field label="Proveedor *"><input required value={f.vendor_name} onChange={set('vendor_name')} /></Field>
+              <Field label="Cédula" hint="Solo dígitos o con guiones; se estandariza"><input value={f.tax_id} onChange={set('tax_id')} /></Field>
+              <Field label="Número de factura *"><input required value={f.invoice_number} onChange={set('invoice_number')} /></Field>
+              <Field label="Fecha de emisión *"><input type="date" required value={f.issue_date} onChange={set('issue_date')} /></Field>
+              <Field label="Moneda"><select value={f.currency} onChange={set('currency')}><option value="CRC">Colones (₡)</option><option value="USD">Dólares ($)</option></select></Field>
+              <Field label="Categoría"><select value={f.category} onChange={set('category')}>{CATEGORIES.map((c) => <option key={c}>{c}</option>)}</select></Field>
+              <Field label="Subtotal" hint="Si lo dejas vacío se calcula desde el total"><input value={f.subtotal} onChange={set('subtotal')} /></Field>
+              <Field label="IVA"><input value={f.tax} onChange={set('tax')} /></Field>
+              <Field label="Total *"><input required value={f.total} onChange={set('total')} /></Field>
+              <Field label="Cuenta bancaria"><input value={f.bank_account} onChange={set('bank_account')} /></Field>
+              <Field label="Descripción"><input value={f.description} onChange={set('description')} /></Field>
+              <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Button type="submit" variant="primary" icon={LuCheck} disabled={busy}>Registrar y analizar</Button>
+                {picked && <Button type="button" onClick={blank} disabled={busy}>Vaciar formulario</Button>}
+              </div>
+            </form>
+          </Card>
+          <Card title="Leer factura en PDF">
+            <p className="muted" style={{ fontSize: 13 }}>Un proveedor de IA gratuito extrae los campos del PDF. Toda factura leída así requiere revisión humana antes de aprobarse.</p>
+            <label className="btn" style={{ cursor: 'pointer' }}><LuUpload /> Elegir PDF<input type="file" accept="application/pdf" onChange={pdf} hidden disabled={busy} /></label>
+          </Card>
+        </div>
       </div>
     </>
   );

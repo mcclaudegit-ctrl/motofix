@@ -13,6 +13,7 @@ import { generateReport, listReports, getReport, REPORT_KINDS } from '../service
 import { extractFromPdf, extractorInfo } from '../services/ai-extractor.js';
 import { cleanTaxId, cleanName } from '../services/ap-clean.js';
 import { logEvent } from '../audit.js';
+import { demoCatalog, demoTemplate } from '../services/ap-demo.js';
 
 // Permiso de aprobación según el nivel que corresponde a la factura.
 const approvalGuard = (ctx, inv) => {
@@ -31,6 +32,14 @@ export function apRoutes(r) {
   }));
 
   r.get('/api/ap/invoices/:id', auth, perm('ap.view'), (ctx) => getInvoice(Number(ctx.params.id)));
+
+  // Plantillas de demostración para «Registrar factura» (riesgo bajo, medio y alto)
+  r.get('/api/ap/demo-templates', auth, perm('ap.simulate'), () => demoCatalog());
+  r.get('/api/ap/demo-templates/:id', auth, perm('ap.simulate'), (ctx) => {
+    const t = demoTemplate(ctx.params.id);
+    if (!t) throw new HttpError(404, 'NO_ENCONTRADO', 'Plantilla no encontrada');
+    return t;
+  });
 
   // Entrada manual (módulo 1): captura con limpieza automática
   r.post('/api/ap/invoices', auth, perm('ap.simulate'), (ctx) => {

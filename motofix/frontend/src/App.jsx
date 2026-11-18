@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import {
   LuLayoutDashboard, LuReceipt, LuWrench, LuUsers, LuFileText, LuPackage, LuTruck, LuCheckCheck, LuScale,
   LuScrollText, LuKeyRound, LuStore, LuBell, LuLogOut, LuMenu, LuX, LuLock, LuShieldAlert, LuTriangleAlert, LuInfo,
-  LuWallet, LuMail, LuBuilding2, LuShieldCheck, LuDatabase, LuFileDown, LuSlidersHorizontal,
+  LuWallet, LuMail, LuBuilding2, LuShieldCheck, LuFilePlus, LuDatabase, LuFileDown, LuSlidersHorizontal,
 } from 'react-icons/lu';
 import { useAuth } from './lib/auth.jsx';
 import { useRouter, Link, matchPath } from './lib/router.jsx';
@@ -29,7 +29,7 @@ const ROUTES = [
   { path: '/', title: 'Dashboard', icon: LuLayoutDashboard, perms: ['dashboard.view', 'dashboard.basic'], el: Dashboard, group: 'Principal' },
   { path: '/cxp', title: 'Panel de riesgo', icon: LuWallet, perms: ['ap.view'], el: CxpDashboard, group: 'Cuentas por pagar' },
   { path: '/cxp/facturas', title: 'Facturas por pagar', icon: LuReceipt, perms: ['ap.view'], el: CxpInvoices, group: 'Cuentas por pagar' },
-  { path: '/cxp/facturas/nueva', title: 'Registrar factura', perms: ['ap.simulate'], el: CxpNew },
+  { path: '/cxp/facturas/nueva', title: 'Registrar factura', icon: LuFilePlus, perms: ['ap.simulate'], el: CxpNew, group: 'Cuentas por pagar' },
   { path: '/cxp/facturas/:id', title: 'Detalle CxP', perms: ['ap.view'], el: CxpDetail },
   { path: '/cxp/bandeja', title: 'Bandeja de correo', icon: LuMail, perms: ['ap.view'], el: CxpInbox, group: 'Cuentas por pagar' },
   { path: '/cxp/proveedores', title: 'Proveedores y empleados', icon: LuBuilding2, perms: ['ap.vendors.view'], el: CxpVendors, group: 'Cuentas por pagar' },

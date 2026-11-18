@@ -252,3 +252,23 @@ test('importación por partes: archivo grande en trozos de 3 MB, en cualquier or
   assert.equal((await raw(url(0, 1, 'f'.repeat(32)), tokens.admin, Buffer.alloc(3 * 1024 * 1024 + 1))).status, 413);
   assert.equal((await raw(url(0, 1, 'e'.repeat(32)), tokens.recepcionista, Buffer.from('x'))).status, 403);
 });
+
+test('facturas demo: cada plantilla obtiene el riesgo esperado al registrarla (dos rondas)', async () => {
+  const first = await call('GET', '/api/ap/demo-templates', tokens.contador);
+  assert.equal(first.status, 200);
+  for (const lvl of ['bajo', 'medio', 'alto']) assert.equal(first.body.templates[lvl].length, 10, `10 plantillas de riesgo ${lvl}`);
+  assert.equal((await call('GET', '/api/ap/demo-templates', tokens.auditor)).status, 403, 'el auditor no registra facturas');
+  const misses = [];
+  for (let round = 0; round < Number(process.env.DEMO_ROUNDS || 2); round++) {
+    for (const lvl of ['bajo', 'medio', 'alto']) {
+      for (let i = 0; i < 10; i++) {
+        const t = (await call('GET', `/api/ap/demo-templates/${lvl}-${i + 1}`, tokens.contador)).body;
+        const r = await call('POST', '/api/ap/invoices', tokens.contador, t.data);
+        assert.equal(r.status, 200, JSON.stringify(r.body));
+        const got = r.body.invoice.risk_level;
+        if (got !== lvl || got !== t.prediction.level) misses.push(`${round}:${t.id} «${t.title}» esperado ${lvl}, previsto ${t.prediction.level}, obtenido ${got} (${r.body.invoice.risk_score}) ${t.prediction.findings.join(' | ')}`);
+      }
+    }
+  }
+  assert.deepEqual(misses, []);
+});

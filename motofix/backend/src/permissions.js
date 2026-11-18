@@ -45,7 +45,7 @@ export const PERMISSIONS = {
   'permissions.manage': { group: 'Accesos', label: 'Editar la matriz de permisos' },
   'supplier.portal': { group: 'Portal proveedores', label: 'Acceder al portal de proveedores' },
   'ap.view': { group: 'Cuentas por pagar', label: 'Ver facturas CxP y dashboard de riesgo' },
-  'ap.simulate': { group: 'Cuentas por pagar', label: 'Recibir facturas (bandeja de correo simulada)' },
+  'ap.simulate': { group: 'Cuentas por pagar', label: 'Registrar facturas CxP (captura, PDF, demostración y bandeja simulada)' },
   'ap.review': { group: 'Cuentas por pagar', label: 'Revisar hallazgos y limpieza de datos' },
   'ap.approve': { group: 'Cuentas por pagar', label: 'Aprobar facturas (primer nivel)' },
   'ap.approve_high': { group: 'Cuentas por pagar', label: 'Aprobar facturas sobre el límite (segundo nivel)' },
