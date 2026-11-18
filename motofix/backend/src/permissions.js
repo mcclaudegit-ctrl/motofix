@@ -3,7 +3,7 @@
 
 export const ROLES = {
   admin: { label: 'Administrador', description: 'Acceso total, gestión de usuarios y roles' },
-  gerente: { label: 'Gerente', description: 'Dashboards ejecutivos, aprobación de anulaciones y excepciones' },
+  gerente: { label: 'Gerente', description: 'Dashboards ejecutivos, aprobación de anulaciones y excepciones, y actividad del equipo' },
   auditor: { label: 'Auditor', description: 'Revisión independiente de CxP, hallazgos y reportes (sin aprobar)' },
   contador: { label: 'Contador', description: 'Registros financieros, NIIF 15, conciliaciones y auditoría' },
   recepcionista: { label: 'Recepcionista', description: 'Órdenes de trabajo, clientes y facturación estándar' },
@@ -41,6 +41,7 @@ export const PERMISSIONS = {
   'ai.scan': { group: 'Auditor Inteligente y bitácora', label: 'Ejecutar escaneo y gestionar alertas' },
   'audit.view': { group: 'Auditor Inteligente y bitácora', label: 'Consultar bitácora de auditoría' },
   'notifications.security': { group: 'Auditor Inteligente y bitácora', label: 'Recibir alertas de seguridad' },
+  'activity.view': { group: 'Equipo', label: 'Ver la actividad diaria de los colaboradores' },
   'users.manage': { group: 'Accesos', label: 'Gestionar usuarios' },
   'permissions.manage': { group: 'Accesos', label: 'Editar la matriz de permisos' },
   'supplier.portal': { group: 'Portal proveedores', label: 'Acceder al portal de proveedores' },
@@ -67,7 +68,7 @@ export const DEFAULT_MATRIX = {
     'dashboard.view', 'invoices.view', 'invoices.create', 'invoices.pay', 'invoices.discount', 'invoices.void',
     'approvals.request', 'approvals.resolve', 'inventory.view', 'inventory.view_cost', 'inventory.edit', 'inventory.adjust',
     'workorders.view', 'workorders.create', 'workorders.update', 'customers.view', 'customers.manage',
-    'quotes.view', 'quotes.create', 'purchases.view', 'accounting.view', 'ai.view', 'ai.scan', 'notifications.security',
+    'quotes.view', 'quotes.create', 'purchases.view', 'accounting.view', 'ai.view', 'ai.scan', 'notifications.security', 'activity.view',
     'ap.view', 'ap.review', 'ap.approve', 'ap.approve_high', 'ap.vendors.view', 'ap.vendors.manage', 'ap.import', 'ap.reports', 'ap.settings',
   ],
   auditor: [
@@ -90,3 +91,7 @@ export const DEFAULT_MATRIX = {
   ventas: ['dashboard.basic', 'inventory.view', 'customers.view', 'quotes.view', 'quotes.create'],
   proveedor: ['supplier.portal'],
 };
+
+// Permisos que se agregaron después de la primera carga de datos: se otorgan una sola vez a los roles
+// indicados en bases ya existentes (ver db.js). Si luego se quitan desde Control de Accesos, no vuelven.
+export const LATER_GRANTS = [{ key: 'grant_activity_view_2026_11', permission: 'activity.view', roles: ['admin', 'gerente'] }];

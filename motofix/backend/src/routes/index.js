@@ -5,6 +5,7 @@ import { catalogRoutes } from './catalog.js';
 import { supplierRoutes } from './suppliers.js';
 import { adminRoutes } from './admin.js';
 import { apRoutes } from './ap.js';
+import { activityRoutes } from './activity.js';
 
 export function buildRouter() {
   const r = new Router();
@@ -14,5 +15,6 @@ export function buildRouter() {
   supplierRoutes(r);
   adminRoutes(r);
   apRoutes(r);
+  activityRoutes(r);
   return r;
 }

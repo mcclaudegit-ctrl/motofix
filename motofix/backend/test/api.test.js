@@ -217,3 +217,23 @@ test('versión publicada para el aviso de actualización en vivo', async () => {
   const b = await call('GET', '/api/version');
   assert.equal(b.body.version, a.body.version, 'estable mientras no se publique otra versión');
 });
+
+test('actividad del equipo: el gerente ve qué hizo cada colaborador en el día', async () => {
+  const g = await login('gerente');
+  const rec = await login('recepcionista');
+  assert.equal((await call('GET', '/api/activity', rec)).status, 403, 'recepción no ve la actividad del equipo');
+  const day = await call('GET', '/api/activity', g);
+  assert.equal(day.status, 200);
+  assert.ok(day.body.users.length >= 7, 'lista a todo el personal');
+  const me = day.body.users.find((u) => u.role === 'gerente');
+  assert.ok(me.logins >= 1 && me.first_login, 'registra el ingreso de hoy');
+  const old = await call('GET', '/api/activity?date=' + new Date(Date.now() - 5 * 86400e3).toISOString().slice(0, 10), g);
+  assert.ok(old.body.team.total > 0, 'hay historial de días anteriores');
+  const busy = old.body.users.find((u) => u.actions > 0);
+  const det = await call('GET', `/api/activity/${busy.id}?date=${old.body.date}`, g);
+  assert.equal(det.status, 200);
+  assert.equal(det.body.events.length, busy.total);
+  assert.equal(det.body.hours.length, 24);
+  assert.equal(det.body.days.length, 14);
+  assert.ok(det.body.events.every((e) => /^\d\d:\d\d$/.test(e.time) && e.category));
+});

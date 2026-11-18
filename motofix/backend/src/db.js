@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 import { config } from './config.js';
 import { RemoteDatabase } from './lib/libsql/remote.js';
+import { LATER_GRANTS } from './permissions.js';
 
 // Con TURSO_DATABASE_URL la base vive en Turso (libSQL en la nube, necesario en Vercel,
 // donde el disco no persiste). Sin ella se usa el archivo SQLite local de siempre.
@@ -303,7 +304,21 @@ db.exec(TRIGGERS_SQL);
 db.exec(`
 UPDATE notifications SET title = 'Alerta del Auditor Inteligente: ' || substr(title, 12) WHERE title LIKE 'Alerta IA: %';
 UPDATE notifications SET link = '/auditor-inteligente' WHERE link = '/ia';
+CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT, updated_at TEXT);
 `);
+
+// Permisos nuevos en bases ya cargadas: se otorgan una sola vez (marca en app_meta).
+{
+  const done = new Set(db.prepare('SELECT key FROM app_meta').all().map((r) => r.key));
+  const pending = LATER_GRANTS.filter((g) => !done.has(g.key));
+  if (pending.length) {
+    const seeded = db.prepare('SELECT COUNT(*) n FROM users').get().n > 0;
+    for (const g of pending) {
+      if (seeded) for (const role of g.roles) db.prepare('INSERT OR IGNORE INTO role_permissions (role, permission) VALUES (?,?)').run(role, g.permission);
+      db.prepare('INSERT OR IGNORE INTO app_meta (key, value, updated_at) VALUES (?,?,?)').run(g.key, seeded ? 'otorgado' : 'base nueva', new Date().toISOString());
+    }
+  }
+}
 
 /** Borra TODOS los datos (solo para re-sembrar). Desactiva temporalmente los triggers de inmutabilidad. */
 export function resetData() {

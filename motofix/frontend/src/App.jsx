@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import {
   LuLayoutDashboard, LuReceipt, LuWrench, LuUsers, LuFileText, LuPackage, LuTruck, LuCheckCheck, LuScale,
   LuScrollText, LuKeyRound, LuStore, LuBell, LuLogOut, LuMenu, LuX, LuLock, LuShieldAlert, LuTriangleAlert, LuInfo,
-  LuWallet, LuMail, LuBuilding2, LuShieldCheck, LuFilePlus, LuDatabase, LuFileDown, LuSlidersHorizontal,
+  LuWallet, LuMail, LuBuilding2, LuShieldCheck, LuFilePlus, LuUserCheck, LuDatabase, LuFileDown, LuSlidersHorizontal,
 } from 'react-icons/lu';
 import { useAuth } from './lib/auth.jsx';
 import { useRouter, Link, matchPath } from './lib/router.jsx';
@@ -22,6 +22,7 @@ import AiEngine from './pages/AiEngine.jsx';
 import Audit from './pages/Audit.jsx';
 import Access from './pages/Access.jsx';
 import Portal from './pages/Portal.jsx';
+import Activity from './pages/Activity.jsx';
 import CxpDashboard, { CxpInvoices, CxpNew, CxpDetail, CxpInbox, CxpVendors, CxpImport, CxpReports, CxpSettings } from './pages/Cxp.jsx';
 
 // Tabla de rutas: cada una declara los permisos (any-of) que la habilitan — "guardias de navegación" (PRD 1.2.3).
@@ -47,6 +48,7 @@ const ROUTES = [
   { path: '/aprobaciones', title: 'Aprobaciones', icon: LuCheckCheck, perms: ['approvals.request', 'approvals.resolve'], el: Approvals, group: 'Finanzas' },
   { path: '/contabilidad', title: 'Contabilidad y NIIF 15', icon: LuScale, perms: ['accounting.view'], el: Accounting, group: 'Finanzas' },
   { path: '/auditor-inteligente', title: 'Auditor Inteligente', icon: LuShieldCheck, perms: ['ai.view'], el: AiEngine, group: 'Control' },
+  { path: '/actividad', title: 'Actividad del equipo', icon: LuUserCheck, perms: ['activity.view'], el: Activity, group: 'Control' },
   { path: '/auditoria', title: 'Bitácora de auditoría', icon: LuScrollText, perms: ['audit.view'], el: Audit, group: 'Control' },
   { path: '/accesos', title: 'Control de accesos', icon: LuKeyRound, perms: ['users.manage', 'permissions.manage'], el: Access, group: 'Control' },
   { path: '/portal', title: 'Portal de proveedores', icon: LuStore, perms: ['supplier.portal'], el: Portal, group: 'Proveedores' },
