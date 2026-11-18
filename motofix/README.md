@@ -4,7 +4,7 @@ Aplicación web (backend + frontend) construida a partir del PRD y WBS de MotoFi
 
 ## Inicio rápido
 
-Requisito: **Node.js 22.13 o superior**. No hay que instalar paquetes: el backend no tiene dependencias externas y el frontend ya viene compilado en `frontend/dist`.
+Requisito: **Node.js 22.13 o superior**. El backend no tiene dependencias externas. El frontend se compila una vez con `cd frontend && npm install && node build.mjs` (genera `frontend/dist`, que no se guarda en git; en Vercel se compila solo en cada publicación).
 
 ```bash
 cd backend
@@ -66,7 +66,7 @@ Vercel no guarda archivos entre solicitudes, así que en la nube la base vive en
 - Copia la URL de la base (`libsql://motofix-<usuario>.turso.io`) y crea un token de lectura y escritura.
 
 **2. Importa el repositorio en Vercel** (https://vercel.com/new)
-- Framework: *Other*. No cambies el directorio raíz ni los comandos: `vercel.json` ya los define (no hay que compilar nada).
+- Framework: *Other*. No cambies los comandos: `vercel.json` ya los define (compila el frontend en cada publicación).
 - Variables de entorno (*Settings → Environment Variables*):
 
 | Variable | Valor |
@@ -86,7 +86,7 @@ También se puede hacer desde tu computadora: `cd backend && TURSO_DATABASE_URL=
 
 **Diferencias frente al servidor propio**
 - El motor de IA se re-evalúa al consultar el dashboard, las notificaciones o el módulo de IA (máximo una vez por minuto), después de cada factura, y en un cron diario (`/api/cron/tick`, el plan Hobby permite uno al día). El reporte semanal de riesgo se genera desde ese cron.
-- Las importaciones aceptan archivos de hasta **4 MB** (Vercel limita el cuerpo de una solicitud a 4,5 MB).
+- Vercel limita cada solicitud a 4,5 MB: las importaciones de más de 3 MB se suben solas por partes (`/api/ap/import/chunk`), hasta 20 MB en total. La lectura de PDF acepta hasta 4 MB.
 - El límite de intentos de inicio de sesión es por instancia.
 - El plan Hobby de Vercel es solo para uso personal y no comercial.
 

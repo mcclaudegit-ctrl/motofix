@@ -21,6 +21,26 @@ async function sendRaw(url, file) {
   return data;
 }
 
+// Vercel acepta como máximo 4,5 MB por solicitud: los archivos más grandes se envían en partes de 3 MB
+// y el servidor las vuelve a unir (hasta 20 MB en total).
+const CHUNK = 3 * 1024 * 1024;
+const MAX_IMPORT = 20 * 1024 * 1024;
+async function uploadForImport(file, onProgress) {
+  const name = encodeURIComponent(file.name);
+  if (file.size > MAX_IMPORT) throw new Error('El archivo supera 20 MB');
+  if (file.size <= CHUNK) return sendRaw(`/api/ap/import/inspect?name=${name}`, file);
+  const id = [...crypto.getRandomValues(new Uint8Array(16))].map((b) => b.toString(16).padStart(2, '0')).join('');
+  const total = Math.ceil(file.size / CHUNK);
+  let out = null;
+  for (let part = 0; part < total; part++) {
+    onProgress?.(part, total);
+    const blob = file.slice(part * CHUNK, (part + 1) * CHUNK, 'application/octet-stream');
+    out = await sendRaw(`/api/ap/import/chunk?upload=${id}&part=${part}&total=${total}&name=${name}`, blob);
+  }
+  onProgress?.(total, total);
+  return out;
+}
+
 const Head = ({ title, text, actions }) => (
   <div className="page-head"><div><h1>{title}</h1><p>{text}</p></div>{actions && <div className="actions">{actions}</div>}</div>
 );
@@ -379,14 +399,14 @@ export function CxpVendors() {
 export function CxpImport() {
   const toast = useToast();
   const [step, setStep] = useState(1); const [up, setUp] = useState(null); const [table, setTable] = useState(''); const [map, setMap] = useState({});
-  const [result, setResult] = useState(null); const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState(null); const [busy, setBusy] = useState(false); const [progress, setProgress] = useState(null);
   const tables = up?.tables || []; const current = tables.find((t) => t.name === table) || tables[0];
   const onFile = async (e) => {
     const file = e.target.files?.[0]; if (!file) return; setBusy(true);
     try {
-      const r = await sendRaw(`/api/ap/import/inspect?name=${encodeURIComponent(file.name)}`, file);
+      const r = await uploadForImport(file, (done, total) => setProgress(done < total ? `Subiendo ${done + 1} de ${total} partes…` : null));
       setUp(r); setTable(r.tables[0]?.name || ''); setMap(r.tables[0]?.suggested || {}); setStep(2);
-    } catch (err) { toast(err.message, 'err'); } finally { setBusy(false); e.target.value = ''; }
+    } catch (err) { toast(err.message, 'err'); } finally { setBusy(false); setProgress(null); e.target.value = ''; }
   };
   const pickTable = (name) => { setTable(name); setMap(tables.find((t) => t.name === name)?.suggested || {}); };
   const run = async () => {
@@ -403,8 +423,8 @@ export function CxpImport() {
       <Card title={`Paso ${step} de 3`}>
         {step === 1 && (
           <div>
-            <p className="muted" style={{ fontSize: 13 }}>Acepta archivos SQLite de hasta 20 MB y CSV (separado por comas o punto y coma). Para PostgreSQL o MySQL, expórtalos a SQLite o CSV: el sistema no abre conexiones externas.</p>
-            <label className="btn primary" style={{ cursor: 'pointer' }}><LuUpload /> {busy ? 'Leyendo…' : 'Elegir archivo'}
+            <p className="muted" style={{ fontSize: 13 }}>Acepta archivos SQLite y CSV (separado por comas o punto y coma) de hasta 20 MB; los grandes se suben por partes. Para PostgreSQL o MySQL, expórtalos a SQLite o CSV: el sistema no abre conexiones externas.</p>
+            <label className="btn primary" style={{ cursor: 'pointer' }}><LuUpload /> {busy ? (progress || 'Leyendo…') : 'Elegir archivo'}
               <input type="file" accept=".db,.sqlite,.sqlite3,.csv,.txt" onChange={onFile} hidden disabled={busy} /></label>
           </div>)}
         {step === 2 && up && (

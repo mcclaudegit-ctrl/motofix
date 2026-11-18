@@ -11,9 +11,9 @@
 
 ## Pendiente
 1. **Gemini con clave real:** configurar `AI_PROVIDER=gemini` y `AI_API_KEY` en Vercel y probar con un PDF real. Sin clave, la lectura funciona en modo simulado.
-2. **Importación:** solo SQLite y CSV, hasta 4 MB en Vercel (límite de la plataforma). PostgreSQL y MySQL requieren exportación previa.
+2. **Importación:** solo SQLite y CSV (hasta 20 MB; los grandes se suben por partes). PostgreSQL y MySQL requieren exportación previa.
 
 ## Cómo correr en local
 - Backend: `cd backend && npm start` (Node 22.13+), abre http://localhost:4000.
 - Pruebas: `cd backend && npm test`.
-- Frontend: `cd frontend && npm install && node build.mjs`.
+- Frontend: `cd frontend && npm install && node build.mjs` (Vercel lo compila solo al publicar).

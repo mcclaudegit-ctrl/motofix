@@ -6,12 +6,14 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { DatabaseSync } from 'node:sqlite';
 import { HttpError } from '../lib/http.js';
-import { isRemote, run, get } from '../db.js';
+import { isRemote, run, get, all } from '../db.js';
 import { logEvent } from '../audit.js';
 import { ingest } from './ap.js';
 
-// Vercel limita el cuerpo de una solicitud a 4,5 MB; en servidor propio se aceptan 20 MB.
-export const MAX_IMPORT_BYTES = (process.env.VERCEL ? 4 : 20) * 1024 * 1024;
+export const MAX_IMPORT_BYTES = 20 * 1024 * 1024;
+// Vercel limita cada solicitud a 4,5 MB: los archivos grandes se suben por partes (ver receiveChunk).
+export const MAX_REQUEST_BYTES = (process.env.VERCEL ? 4 : 20) * 1024 * 1024;
+export const MAX_CHUNK_BYTES = 3 * 1024 * 1024;
 export const MAX_ROWS = 5000;
 export const FIELDS = {
   vendor_name: { label: 'Nombre del proveedor', required: true },
@@ -105,7 +107,7 @@ function parseCsv(text) {
 export function inspectUpload(buf, name = 'archivo') {
   sweep();
   if (!buf?.length) throw new HttpError(422, 'ARCHIVO_VACIO', 'El archivo está vacío');
-  if (buf.length > MAX_IMPORT_BYTES) throw new HttpError(413, 'PAYLOAD_GRANDE', `El archivo supera ${MAX_IMPORT_BYTES / 1e6} MB`);
+  if (buf.length > MAX_IMPORT_BYTES) throw new HttpError(413, 'PAYLOAD_GRANDE', `El archivo supera ${MAX_IMPORT_BYTES / 1024 / 1024} MB`);
   const token = crypto.randomBytes(16).toString('hex');
   const isSqlite = buf.subarray(0, 16).toString('latin1') === 'SQLite format 3\0';
   if (isSqlite) {
@@ -176,4 +178,34 @@ export function runImport({ token, table, mapping }, actor, { ip, device }) {
     detail: `${s.kind === 'sqlite' ? 'SQLite' : 'CSV'} · ${table || s.label} · ${created} factura(s) · ${flagged} con riesgo medio/alto · ${errors.length} error(es)` });
   dropStage(token); if (s.file) try { fs.rmSync(s.file, { force: true }); } catch { /* ignorar */ }
   return { created, flagged, needs_review: withIssues, errors, rows_read: records.length, limit: MAX_ROWS };
+}
+
+/**
+ * Subida por partes: el navegador divide el archivo en trozos de hasta 3 MB (bajo el límite de 4,5 MB
+ * por solicitud de Vercel). Cada parte se guarda en la base, así que pueden llegar a instancias distintas.
+ * Al recibir la última se arma el archivo y se procesa como una carga normal.
+ */
+export function receiveChunk({ uploadId, part, total, name, body, userId }) {
+  if (!/^[a-f0-9]{16,64}$/.test(String(uploadId || ''))) throw new HttpError(422, 'VALIDACION', 'Identificador de carga inválido');
+  part = Number(part); total = Number(total);
+  const maxParts = Math.ceil(MAX_IMPORT_BYTES / MAX_CHUNK_BYTES);
+  if (!Number.isInteger(total) || total < 1 || total > maxParts) throw new HttpError(413, 'PAYLOAD_GRANDE', `El archivo supera ${MAX_IMPORT_BYTES / 1024 / 1024} MB`);
+  if (!Number.isInteger(part) || part < 0 || part >= total) throw new HttpError(422, 'VALIDACION', 'Número de parte inválido');
+  if (!body?.length) throw new HttpError(422, 'ARCHIVO_VACIO', 'Parte vacía');
+  if (body.length > MAX_CHUNK_BYTES) throw new HttpError(413, 'PAYLOAD_GRANDE', 'Cada parte debe medir como máximo 3 MB');
+  run('DELETE FROM ap_upload_chunks WHERE created_at < ?', Date.now() - 60 * 60e3); // cargas abandonadas
+  const owner = get('SELECT user_id, total FROM ap_upload_chunks WHERE upload_id = ? LIMIT 1', uploadId);
+  if (owner && (owner.user_id !== userId || owner.total !== total)) throw new HttpError(409, 'CONFLICTO', 'La carga no coincide con las partes anteriores');
+  run('INSERT OR REPLACE INTO ap_upload_chunks (upload_id, part, total, user_id, content, created_at) VALUES (?,?,?,?,?,?)',
+    uploadId, part, total, userId, body, Date.now());
+  const have = get('SELECT COUNT(*) n, SUM(LENGTH(content)) size FROM ap_upload_chunks WHERE upload_id = ?', uploadId);
+  if (have.size > MAX_IMPORT_BYTES) {
+    run('DELETE FROM ap_upload_chunks WHERE upload_id = ?', uploadId);
+    throw new HttpError(413, 'PAYLOAD_GRANDE', `El archivo supera ${MAX_IMPORT_BYTES / 1024 / 1024} MB`);
+  }
+  if (have.n < total) return { done: false, received: have.n, total };
+  const parts = all('SELECT content FROM ap_upload_chunks WHERE upload_id = ? ORDER BY part', uploadId);
+  run('DELETE FROM ap_upload_chunks WHERE upload_id = ?', uploadId);
+  const buf = Buffer.concat(parts.map((p) => Buffer.from(p.content)));
+  return { done: true, ...inspectUpload(buf, name) };
 }

@@ -8,7 +8,7 @@ import {
   getSettings, saveSettings, getWeights, saveWeights, rescoreAll, nextApprovalPerm, RULES,
 } from '../services/ap.js';
 import { simulateInbox, SCENARIOS } from '../services/ap-inbox.js';
-import { inspectUpload, runImport, FIELDS, MAX_IMPORT_BYTES } from '../services/ap-import.js';
+import { inspectUpload, runImport, receiveChunk, FIELDS, MAX_IMPORT_BYTES, MAX_REQUEST_BYTES } from '../services/ap-import.js';
 import { generateReport, listReports, getReport, REPORT_KINDS } from '../services/ap-report.js';
 import { extractFromPdf, extractorInfo } from '../services/ai-extractor.js';
 import { cleanTaxId, cleanName } from '../services/ap-clean.js';
@@ -47,7 +47,7 @@ export function apRoutes(r) {
   r.postRaw('/api/ap/invoices/pdf', auth, perm('ap.simulate'), async (ctx) => {
     const buf = ctx.rawBody;
     if (!buf?.length) throw new HttpError(422, 'ARCHIVO_VACIO', 'Envía el PDF en el cuerpo de la solicitud');
-    if (buf.length > MAX_IMPORT_BYTES) throw new HttpError(413, 'PAYLOAD_GRANDE', `El PDF supera ${MAX_IMPORT_BYTES / 1024 / 1024} MB`);
+    if (buf.length > MAX_REQUEST_BYTES) throw new HttpError(413, 'PAYLOAD_GRANDE', `El PDF supera ${MAX_REQUEST_BYTES / 1024 / 1024} MB`);
     if (buf.subarray(0, 4).toString('latin1') !== '%PDF') throw new HttpError(422, 'FORMATO_INVALIDO', 'El archivo no es un PDF');
     const ex = await extractFromPdf({ base64Pdf: buf.toString('base64') });
     const f = ex.fields || {};
@@ -131,7 +131,14 @@ export function apRoutes(r) {
     const name = String(ctx.query.name || 'archivo').slice(0, 120);
     const out = inspectUpload(ctx.rawBody, name);
     logEvent({ ...evt(ctx), action: 'CXP_IMPORTACION_CARGA', entity: 'importacion', detail: `${name} (${out.kind})` });
-    return { ...out, fields: FIELDS, limits: { max_mb: MAX_IMPORT_BYTES / 1e6 } };
+    return { ...out, fields: FIELDS, limits: { max_mb: MAX_IMPORT_BYTES / 1024 / 1024 } };
+  });
+  r.postRaw('/api/ap/import/chunk', auth, perm('ap.import'), (ctx) => {
+    const name = String(ctx.query.name || 'archivo').slice(0, 120);
+    const out = receiveChunk({ uploadId: ctx.query.upload, part: ctx.query.part, total: ctx.query.total, name, body: ctx.rawBody, userId: ctx.user.id });
+    if (!out.done) return out;
+    logEvent({ ...evt(ctx), action: 'CXP_IMPORTACION_CARGA', entity: 'importacion', detail: `${name} (${out.kind}, por partes)` });
+    return { ...out, fields: FIELDS, limits: { max_mb: MAX_IMPORT_BYTES / 1024 / 1024 } };
   });
   r.post('/api/ap/import/run', auth, perm('ap.import'), (ctx) => runImport(ctx.body, ctx.user, meta(ctx)));
 

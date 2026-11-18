@@ -284,6 +284,9 @@ CREATE TABLE IF NOT EXISTS ap_reports (
   id INTEGER PRIMARY KEY AUTOINCREMENT, kind TEXT NOT NULL, format TEXT NOT NULL, title TEXT NOT NULL,
   content BLOB NOT NULL, scheduled INTEGER NOT NULL DEFAULT 0, created_by INTEGER, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS ap_import_stage (token TEXT PRIMARY KEY, meta TEXT NOT NULL, content BLOB, expires INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS ap_upload_chunks (
+  upload_id TEXT NOT NULL, part INTEGER NOT NULL, total INTEGER NOT NULL, user_id INTEGER NOT NULL,
+  content BLOB NOT NULL, created_at INTEGER NOT NULL, PRIMARY KEY (upload_id, part));
 `;
 db.exec(AP_SCHEMA);
 
@@ -298,7 +301,7 @@ db.exec(TRIGGERS_SQL);
 /** Borra TODOS los datos (solo para re-sembrar). Desactiva temporalmente los triggers de inmutabilidad. */
 export function resetData() {
   db.exec('DROP TRIGGER IF EXISTS audit_no_update; DROP TRIGGER IF EXISTS audit_no_delete; PRAGMA foreign_keys = OFF;');
-  for (const t of ['audit_log','notifications','anomalies','approval_requests','supplier_invoices','quotes','invoice_items','invoices','work_order_parts','work_orders','stock_movements','products','customers','ap_invoices','ap_inbox','ap_vendors','ap_employees','ap_reports','ap_import_stage','ap_risk_weights','ap_settings','role_permissions','users','suppliers'])
+  for (const t of ['audit_log','notifications','anomalies','approval_requests','supplier_invoices','quotes','invoice_items','invoices','work_order_parts','work_orders','stock_movements','products','customers','ap_invoices','ap_inbox','ap_vendors','ap_employees','ap_reports','ap_import_stage','ap_upload_chunks','ap_risk_weights','ap_settings','role_permissions','users','suppliers'])
     db.exec(`DELETE FROM ${t}`);
   db.exec("DELETE FROM sqlite_sequence; PRAGMA foreign_keys = ON;");
   db.exec(TRIGGERS_SQL);

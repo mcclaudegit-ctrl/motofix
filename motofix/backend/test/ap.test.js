@@ -224,3 +224,31 @@ test('el auditor revisa todo pero no aprueba ni modifica', async () => {
   assert.equal((await call('PATCH', `/api/ap/invoices/${id}`, tokens.auditor, { total: 1 })).status, 403);
   assert.equal((await call('GET', '/api/ap/invoices', tokens.recepcionista)).status, 403);
 });
+
+test('importación por partes: archivo grande en trozos de 3 MB, en cualquier orden', async () => {
+  const header = 'proveedor,factura,fecha,monto,cedula\n';
+  const line = 'Repuestos del Pacífico S.A.,FE-00000001,2026-11-10,125000,3-101-123456\n';
+  const csv = Buffer.from(header + line.repeat(Math.ceil(7 * 1024 * 1024 / line.length)), 'utf8');
+  const CH = 3 * 1024 * 1024; const total = Math.ceil(csv.length / CH);
+  assert.equal(total, 3);
+  const id = 'a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6';
+  const url = (p, t = total, u = id) => `/api/ap/import/chunk?upload=${u}&part=${p}&total=${t}&name=grande.csv`;
+  const p2 = await raw(url(2), tokens.admin, csv.subarray(2 * CH), 'application/octet-stream');
+  assert.deepEqual([p2.status, p2.body.done, p2.body.received], [200, false, 1]);
+  const p0 = await raw(url(0), tokens.admin, csv.subarray(0, CH), 'application/octet-stream');
+  assert.equal(p0.body.received, 2);
+  // otro usuario no puede inyectar partes en una carga ajena
+  const intruso = await raw(url(1), tokens.contador, csv.subarray(CH, 2 * CH), 'application/octet-stream');
+  assert.equal(intruso.status, 409);
+  const p1 = await raw(url(1), tokens.admin, csv.subarray(CH, 2 * CH), 'application/octet-stream');
+  assert.equal(p1.status, 200);
+  assert.equal(p1.body.done, true);
+  assert.equal(p1.body.kind, 'csv');
+  assert.ok(p1.body.token);
+  assert.equal(p1.body.tables[0].rows, Math.ceil(7 * 1024 * 1024 / line.length));
+  // validaciones
+  assert.equal((await raw(url(0, 9), tokens.admin, Buffer.from('x'))).status, 413); // más de 20 MB en total
+  assert.equal((await raw(url(0, 1, 'no-valido'), tokens.admin, Buffer.from('x'))).status, 422);
+  assert.equal((await raw(url(0, 1, 'f'.repeat(32)), tokens.admin, Buffer.alloc(3 * 1024 * 1024 + 1))).status, 413);
+  assert.equal((await raw(url(0, 1, 'e'.repeat(32)), tokens.recepcionista, Buffer.from('x'))).status, 403);
+});
