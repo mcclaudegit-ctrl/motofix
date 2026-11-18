@@ -74,13 +74,14 @@ Vercel no guarda archivos entre solicitudes, así que en la nube la base vive en
 | `TURSO_DATABASE_URL` | la URL `libsql://…` de Turso |
 | `TURSO_AUTH_TOKEN` | el token de Turso |
 | `JWT_SECRET` | texto aleatorio largo (p. ej. `openssl rand -hex 32`) |
-| `CRON_SECRET` | otro texto aleatorio; protege `/api/setup` y el cron diario |
+| `CRON_SECRET` | opcional: otro texto aleatorio; activa el cron diario y permite reiniciar la demo |
 | `DEMO_MODE` | `true` para la demo con selector de rol; `false` para uso real |
 | `AI_PROVIDER`, `AI_API_KEY` | opcionales, para leer PDF con Gemini |
 
 **3. Carga los datos de demostración** (una sola vez), abriendo en el navegador:
-`https://<tu-app>.vercel.app/api/setup?clave=<CRON_SECRET>`
-Solo funciona con la base vacía. Para borrar todo y recargar la demo, agrega `&reiniciar=1`.
+`https://<tu-app>.vercel.app/api/setup`
+Solo funciona con la base vacía. Para borrar todo y recargar la demo: `/api/setup?clave=<CRON_SECRET>&reiniciar=1`.
+Con la integración de Turso del Marketplace de Vercel (*Storage → Create Database → Turso*), `TURSO_DATABASE_URL` y `TURSO_AUTH_TOKEN` se configuran solas; sin `JWT_SECRET`, el secreto de sesión se deriva del token de Turso.
 También se puede hacer desde tu computadora: `cd backend && TURSO_DATABASE_URL=… TURSO_AUTH_TOKEN=… npm run turso:init`.
 
 **Diferencias frente al servidor propio**

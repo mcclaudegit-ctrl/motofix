@@ -1,7 +1,7 @@
 // Punto de entrada serverless (Vercel). Reemplaza a server.js: no hay listen() ni setInterval,
 // así que las tareas periódicas se ejecutan bajo demanda (con límite de frecuencia) y por cron.
 import { config } from './config.js';
-import { db, get, isRemote, resetData } from './db.js';
+import { db, get, isRemote, resetData, TRIGGERS_SQL } from './db.js';
 import { createHandler } from './lib/http.js';
 import { buildRouter } from './routes/index.js';
 import { detect } from './anomaly.js';
@@ -55,21 +55,26 @@ export default async function handler(req, res) {
   }
 
   // Configuración inicial (una vez): carga los datos de demostración en Turso.
-  //   https://<tu-app>.vercel.app/api/setup?clave=<CRON_SECRET>      (solo si la base está vacía)
-  //   …&reiniciar=1                                                   (borra todo y recarga la demo)
+  //   https://<tu-app>.vercel.app/api/setup                              (solo si la base está vacía)
+  //   …/api/setup?clave=<CRON_SECRET>&reiniciar=1                      (borra todo y recarga la demo)
   if (req.url.split('?')[0] === '/api/setup') {
     const q = new URL(req.url, 'http://localhost').searchParams;
     const key = q.get('clave') || (req.headers.authorization || '').replace(/^Bearer /, '');
-    if (!config.cronSecret || key !== config.cronSecret) return json(res, 401, { error: 'NO_AUTORIZADO', message: 'Falta ?clave= con el valor de CRON_SECRET' });
+    const authorized = Boolean(config.cronSecret) && key === config.cronSecret;
     if (!isRemote) return json(res, 409, { error: 'SIN_TURSO', message: 'Configura TURSO_DATABASE_URL y TURSO_AUTH_TOKEN en Vercel' });
     const users = get('SELECT COUNT(*) n FROM users').n;
-    if (users && q.get('reiniciar') !== '1') return json(res, 409, { error: 'YA_CONFIGURADA', message: `La base ya tiene ${users} usuario(s). Agrega &reiniciar=1 para borrarla y recargar la demo.` });
+    // Base vacía o carga a medias: se completa sin clave (solo agrega datos de demo a tablas vacías).
+    // Borrar una base con datos y recargarla (reiniciar=1) sí exige CRON_SECRET.
+    const reset = q.get('reiniciar') === '1';
+    if (reset && !authorized) return json(res, 401, { error: 'NO_AUTORIZADO', message: 'Reiniciar la demo requiere ?clave= con el valor de CRON_SECRET' });
     const { seedToFile, copyToRemote } = await import('./tools/turso-copy.js');
     const t0 = Date.now();
     const { file, log } = seedToFile();
-    const counts = copyToRemote(file, db, resetData);
+    const out = copyToRemote(file, db, { resetData, triggersSql: TRIGGERS_SQL, mode: reset || !users ? 'reset' : 'resume', budgetMs: 40_000 });
     lastDetect = 0;
-    return json(res, 200, { ok: true, seed: log, rows: Object.values(counts).reduce((a, b) => a + b, 0), ms: Date.now() - t0, next: 'Abre la app e ingresa con una cuenta demo (contraseña MotoFix2026!).' });
+    const rows = Object.values(out.counts).reduce((a, b) => a + b, 0);
+    if (out.pending.length) return json(res, 202, { ok: true, done: false, rows, pending: out.pending, next: 'Falta terminar: vuelve a abrir /api/setup para continuar.' });
+    return json(res, 200, { ok: true, done: true, seed: log, rows, ms: Date.now() - t0, next: 'Abre la app e ingresa con una cuenta demo (contraseña MotoFix2026!).' });
   }
 
   if (req.method === 'GET' && /^\/api\/(dashboard|notifications|ai)/.test(req.url)) maybeDetect();

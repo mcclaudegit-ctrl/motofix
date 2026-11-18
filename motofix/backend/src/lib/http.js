@@ -51,7 +51,8 @@ export function parseDevice(ua = '') {
 }
 
 function clientIp(req) {
-  let ip = req.socket.remoteAddress || '';
+  // En Vercel la solicitud no trae socket: la IP llega en X-Forwarded-For.
+  let ip = req.socket?.remoteAddress || '';
   if (config.trustProxy && req.headers['x-forwarded-for']) ip = String(req.headers['x-forwarded-for']).split(',')[0].trim();
   return ip.replace(/^::ffff:/, '').replace(/^::1$/, '127.0.0.1');
 }
@@ -99,28 +100,38 @@ export class Router {
   }
 }
 
-async function readRaw(req, max) {
+/**
+ * Cuerpo completo como Buffer. En un servidor propio se lee el stream; en Vercel la solicitud
+ * no trae socket y el runtime ya expone el cuerpo en `req.body` (objeto, texto o Buffer).
+ */
+async function bodyBuffer(req, max, tooLarge) {
+  let buf;
+  if (!req.socket && 'body' in req) {
+    const b = req.body;
+    buf = b == null ? Buffer.alloc(0) : Buffer.isBuffer(b) ? b : b instanceof Uint8Array ? Buffer.from(b)
+      : typeof b === 'string' ? Buffer.from(b, 'utf8') : Buffer.from(JSON.stringify(b), 'utf8');
+    if (buf.length > max) throw tooLarge;
+    return buf;
+  }
   const chunks = []; let size = 0;
   for await (const c of req) {
     size += c.length;
-    if (size > max) throw new HttpError(413, 'PAYLOAD_GRANDE', `El archivo supera ${Math.round(max / 1e6)} MB`);
+    if (size > max) throw tooLarge;
     chunks.push(c);
   }
   return Buffer.concat(chunks);
 }
 
+async function readRaw(req, max) {
+  return bodyBuffer(req, max, new HttpError(413, 'PAYLOAD_GRANDE', `El archivo supera ${Math.round(max / 1e6)} MB`));
+}
+
 async function readBody(req) {
-  const chunks = [];
-  let size = 0;
-  for await (const c of req) {
-    size += c.length;
-    if (size > 1_000_000) throw new HttpError(413, 'PAYLOAD_GRANDE', 'Solicitud demasiado grande');
-    chunks.push(c);
-  }
-  if (!size) return {};
+  const buf = await bodyBuffer(req, 1_000_000, new HttpError(413, 'PAYLOAD_GRANDE', 'Solicitud demasiado grande'));
+  if (!buf.length) return {};
   const ctype = req.headers['content-type'] || '';
   if (!ctype.includes('application/json')) throw new HttpError(415, 'TIPO_NO_SOPORTADO', 'Se espera application/json');
-  try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); }
+  try { return JSON.parse(buf.toString('utf8')); }
   catch { throw new HttpError(400, 'JSON_INVALIDO', 'El cuerpo no es JSON válido'); }
 }
 
