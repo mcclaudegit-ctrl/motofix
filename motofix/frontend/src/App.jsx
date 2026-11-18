@@ -173,7 +173,7 @@ function Bell() {
   useEffect(() => { const c = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false); document.addEventListener('mousedown', c); return () => document.removeEventListener('mousedown', c); }, []);
 
   const toggle = async () => { setOpen((o) => !o); if (!open && data.unread) { await post('/api/notifications/read', {}, { quiet: true }); setTimeout(() => load(true), 1500); } };
-  const Icon = (l) => (l === 'critical' ? <LuShieldAlert color="#d2382f" /> : l === 'warning' ? <LuTriangleAlert color="#c97a0a" /> : <LuInfo color="#0f84b5" />);
+  const Icon = (l) => (l === 'critical' ? <LuShieldAlert color="var(--danger)" /> : l === 'warning' ? <LuTriangleAlert color="var(--warn)" /> : <LuInfo color="var(--brand)" />);
 
   return (
     <div className="bell" ref={ref}>

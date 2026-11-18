@@ -21,7 +21,7 @@ export default function Login() {
     <div className="login">
       <div className="login-art">
         <div className="gear-bg" aria-hidden="true" />
-        <img src="/logo-full.jpg" alt="MotoFix" />
+        <img src="/logo-full.png" alt="MotoFix" />
         <p>Facturación, inventario y control de accesos con auditoría inteligente para tu taller.</p>
       </div>
       <div className="login-form">

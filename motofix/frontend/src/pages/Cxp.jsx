@@ -44,7 +44,7 @@ async function uploadForImport(file, onProgress) {
 const Head = ({ title, text, actions }) => (
   <div className="page-head"><div><h1>{title}</h1><p>{text}</p></div>{actions && <div className="actions">{actions}</div>}</div>
 );
-const grid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 14 };
+const grid = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(170px,1fr))', gap: 20 };
 
 // ---------- Panel ----------
 export default function CxpDashboard() {
@@ -71,9 +71,9 @@ export default function CxpDashboard() {
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 4 }}>
                 <RiskBadge level={l} /><span className="num">{data.by_level[l].count} · {crc(data.by_level[l].amount)}</span>
               </div>
-              <div style={{ height: 10, background: 'var(--line, #e5e9ec)', borderRadius: 6 }}>
-                <div style={{ width: `${(data.by_level[l].amount / maxAmt) * 100}%`, height: '100%', borderRadius: 6,
-                  background: l === 'alto' ? '#c0392b' : l === 'medio' ? '#e08e0b' : 'var(--brand)' }} />
+              <div style={{ height: 6, background: 'var(--line-2)', borderRadius: 3 }}>
+                <div style={{ width: `${(data.by_level[l].amount / maxAmt) * 100}%`, height: '100%', borderRadius: 3,
+                  background: l === 'alto' ? 'var(--danger)' : l === 'medio' ? '#d08a16' : 'var(--ok)' }} />
               </div>
             </div>
           ))}
@@ -103,7 +103,7 @@ export default function CxpDashboard() {
         </Card>
         <Card title="Reglas que más se activan">
           {data.top_rules.length === 0 ? <Empty>Sin hallazgos abiertos.</Empty> : data.top_rules.map((r) => (
-            <div key={r.rule} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--line, #e5e9ec)', fontSize: 13 }}>
+            <div key={r.rule} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--line-2)', fontSize: 13 }}>
               <span>{r.label}</span><b className="num">{r.count}</b>
             </div>))}
         </Card>
@@ -148,7 +148,7 @@ export function CxpInvoices() {
                 <td>{fmtDate(i.issue_date)}</td><td className="num">{crc(i.total_crc)}</td>
                 <td><Badge>{SOURCES[i.source] || i.source}</Badge></td>
                 <td><RiskBadge level={i.risk_level} score={i.risk_score} /></td>
-                <td><CxpStatus status={i.status} />{i.needs_human_review ? <><br /><small style={{ color: '#b45309' }}>Requiere revisión</small></> : null}</td>
+                <td><CxpStatus status={i.status} />{i.needs_human_review ? <><br /><small style={{ color: 'var(--warn)' }}>Requiere revisión</small></> : null}</td>
               </tr>))}</tbody></table></div>)}
       </Card>
       {data && <small className="muted">{data.total} resultado(s)</small>}
@@ -225,7 +225,7 @@ export function CxpDetail({ params }) {
         <div style={{ display: 'grid', gap: 18 }}>
           <Card title="Datos estandarizados" actions={can('ap.review') && open && <Button size="sm" icon={LuPencil} onClick={() => setDlg({ kind: 'edit', f: { invoice_number: data.invoice_number, issue_date: data.issue_date, vendor_name: data.vendor_name, vendor_tax_id: data.vendor_tax_id || '', currency: data.currency, subtotal: data.subtotal, tax: data.tax, total: data.total, category: data.category, bank_account: data.bank_account || '', description: data.description || '' }, confirm: false })}>Corregir</Button>}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(200px,1fr))', gap: 12, fontSize: 14 }}>
-              <div><small className="muted">Proveedor</small><br /><b>{data.vendor_name || '—'}</b>{data.vendor ? <><br /><small style={{ color: '#2e7d32' }}>En el maestro</small></> : <><br /><small style={{ color: '#b45309' }}>No registrado</small></>}</div>
+              <div><small className="muted">Proveedor</small><br /><b>{data.vendor_name || '—'}</b>{data.vendor ? <><br /><small style={{ color: 'var(--ok)' }}>En el maestro</small></> : <><br /><small style={{ color: 'var(--warn)' }}>No registrado</small></>}</div>
               <div><small className="muted">Cédula</small><br /><span className="mono">{fmtTax(data.vendor_tax_id)}</span></div>
               <div><small className="muted">Número</small><br /><span className="mono">{data.invoice_number || '—'}</span></div>
               <div><small className="muted">Fecha</small><br />{fmtDate(data.issue_date)}</div>
@@ -371,7 +371,7 @@ export function CxpVendors() {
             <tbody>{vendors.data.vendors.map((v) => (
               <tr key={v.id}><td><b>{v.name}</b>{v.status !== 'activo' && <><br /><Badge tone="danger">Inactivo</Badge></>}</td>
                 <td className="mono">{fmtTax(v.tax_id)}</td><td>{v.category}</td>
-                <td className="mono" style={{ fontSize: 12 }}>{v.bank_account || '—'}{v.bank_account_changed_at && <><br /><small style={{ color: '#b45309' }}>Cambiada {ago(v.bank_account_changed_at)}</small></>}</td>
+                <td className="mono" style={{ fontSize: 12 }}>{v.bank_account || '—'}{v.bank_account_changed_at && <><br /><small style={{ color: 'var(--warn)' }}>Cambiada {ago(v.bank_account_changed_at)}</small></>}</td>
                 <td className="num">{v.invoices}</td><td className="num">{crc(v.amount)}</td>
                 <td>{can('ap.vendors.manage') && <Button size="sm" icon={LuPencil} onClick={() => setDlg({ kind: 'edit', id: v.id, f: { name: v.name, bank_account: v.bank_account || '', status: v.status, contact_email: v.contact_email || '' } })}>Editar</Button>}</td></tr>))}</tbody></table></div>)}
       </Card>
