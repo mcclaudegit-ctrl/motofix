@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import {
   LuLayoutDashboard, LuReceipt, LuWrench, LuUsers, LuFileText, LuPackage, LuTruck, LuCheckCheck, LuScale, LuBrainCircuit,
-  LuScrollText, LuKeyRound, LuStore, LuBell, LuLogOut, LuMenu, LuLock, LuShieldAlert, LuTriangleAlert, LuInfo,
+  LuScrollText, LuKeyRound, LuStore, LuBell, LuLogOut, LuMenu, LuX, LuLock, LuShieldAlert, LuTriangleAlert, LuInfo,
   LuWallet, LuMail, LuBuilding2, LuDatabase, LuFileDown, LuSlidersHorizontal,
 } from 'react-icons/lu';
 import { useAuth } from './lib/auth.jsx';
@@ -80,6 +80,14 @@ function Shell() {
 
   useEffect(() => { if (demoMode) get('/api/auth/demo-roles').then((d) => setRoles(d.roles)).catch(() => {}); }, [demoMode]);
   useEffect(() => { setOpen(false); }, [pathname]);
+  // Menú móvil: se cierra con Escape y bloquea el desplazamiento de la página mientras está abierto.
+  useEffect(() => {
+    if (!open) return;
+    const k = (e) => e.key === 'Escape' && setOpen(false);
+    window.addEventListener('keydown', k);
+    document.body.style.overflow = 'hidden';
+    return () => { window.removeEventListener('keydown', k); document.body.style.overflow = ''; };
+  }, [open]);
   // Cada navegación queda en la bitácora (PRD criterio 4).
   useEffect(() => { if (current) track('NAVEGACION', 'ruta', `${current.r.title} (${pathname})${allowed ? '' : ' — BLOQUEADA por guardia de navegación'}`); }, [pathname, user.id]); // eslint-disable-line
   useEffect(() => { if (pathname === '/' && home !== '/') navigate(home, { replace: true }); }, [pathname, home, navigate]);
@@ -96,14 +104,16 @@ function Shell() {
 
   return (
     <div className="app">
-      <aside className={`sidebar ${open ? 'open' : ''}`}>
-        <div className="brand"><LogoMark /><span className="wordmark">Moto<b>Fix</b></span></div>
+      {open && <div className="nav-backdrop" onClick={() => setOpen(false)} aria-hidden="true" />}
+      <aside className={`sidebar ${open ? 'open' : ''}`} id="menu-lateral">
+        <div className="brand"><LogoMark /><span className="wordmark">Moto<b>Fix</b></span>
+          <button className="btn ghost menu-close" onClick={() => setOpen(false)} aria-label="Cerrar menú"><LuX /></button></div>
         <nav className="nav" aria-label="Navegación principal">
           {groups.map((g) => {
             const items = ROUTES.filter((r) => r.group === g && can(...r.perms));
             if (!items.length) return null;
             return <div key={g}><div className="nav-group">{g}</div>{items.map((r) => (
-              <Link key={r.path} to={r.path} className={activePath === r.path ? 'active' : ''}>
+              <Link key={r.path} to={r.path} className={activePath === r.path ? 'active' : ''} onClick={() => setOpen(false)}>
                 <r.icon />{r.title}
               </Link>))}</div>;
           })}
@@ -113,7 +123,7 @@ function Shell() {
 
       <div className="main">
         <header className="topbar">
-          <button className="btn ghost menu-btn" onClick={() => setOpen((o) => !o)} aria-label="Menú"><LuMenu /></button>
+          <button className="btn ghost menu-btn" onClick={() => setOpen((o) => !o)} aria-label={open ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={open} aria-controls="menu-lateral"><LuMenu /></button>
           <div className="grow" />
           {demoMode && roles.length > 0 && (
             <label className="demo-switch" title="Cambia la sesión entre perfiles para ver cómo cambia la interfaz según el rol">
